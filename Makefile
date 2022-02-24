@@ -3,13 +3,13 @@ CXX=g++
 RM=rm -f
 CPPFLAGS = -g -std=c++11
 
-SRCS = main.cpp
+SRCS = main.cpp testScanner.cpp testScanner.h token.h
 OBJS = $(subst .cc,.o,$(SRCS))
 
 all: main
 
 main: $(OBJS)
-	$(CXX) $(CPPFLAGS) $(LDFLAGS) -o main $(OBJS) $(LDLIBS)
+	$(CXX) $(CPPFLAGS)  -o main $(OBJS)
 
 clean:
 	$(RM) $(OBJS)

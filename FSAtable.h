@@ -1,6 +1,7 @@
 #include "tokenID.h"
 
-const int table[last_state][LAST_TK] = {
+const int numCharacters = 25;
+const int table[last_state][numCharacters] = {
     // a        1         A         _         =          <         >         !         :         (         )         [         ]         {         }         ,         .         +         -         *           /        %       ;           WS
     { s2,       s3,       ID_ERR,   s5,       s6,        s7,       s8,       s9,       s10,      LPRN_TK,  RPRN_TK,  LBRC_TK,  RBRC_TK,  LCBRC_TK, RCBRC_TK, COMMA_TK, DOT_TK,   PLUS_TK,  MINUS_TK, MULT_TK,   DIV_TK,   MOD_TK,   SCOLN_TK, WS_E,     }, // s1 (from start)
     { s2,       s11,      s4,       s5,       ID_TK,     ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,     ID_TK,    ID_TK,    ID_TK,    ID_TK,    }, // s2 (from lower case letter) 

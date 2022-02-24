@@ -2,13 +2,23 @@
 #define TOKENID_H
 
 #include <string>
+using namespace std;
+
 
 enum tokenID {
+    //error
+    WS_E     = -6,   // whitespace is not a token
+    ID_ERR   = -5, // ID cannot start with a number or a capital letter
+    ASGN_ERR = -4, // unfished assignment (unrecongnized character after = )
+    LTE_ERR  = -3, // unfinished less than or equal to 
+    GRTE_ERR = -2, // unfinished greater than or equal to
+    BANG_ERR = -1, // hanging ! 
+
     // Transition States
-    s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, last_state,
+    s1 = 0, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11, last_state,
 
     //TOKENS
-    ID_TK,
+    ID_TK = 1001,
     NUM_TK,
     
     //OPERATORS
@@ -59,20 +69,11 @@ enum tokenID {
     PRC_TK,
 
     EOF_TK,
-
-    //error
-    WS_E     = 999,   // whitespace is not a token
-    ID_ERR   = 1000, // ID cannot start with a number or a capital letter
-    ASGN_ERR = 1001, // unfished assignment (unrecongnized character after = )
-    LTE_ERR  = 1002, // unfinished less than or equal to 
-    GRTE_ERR = 1003, // unfinished greater than or equal to
-    BANG_ERR = 1004, // hanging ! 
-    
-    LAST_TK //for knowing how long the token id list is
+    LAST_TK, //for knowing how long the token id list is
+     
 };
 
 string tokenNames[] = { 
-    "","","","","","","","","","",
     "ID",
     "Number",
     "Equality",
@@ -121,6 +122,6 @@ string tokenNames[] = {
     "unfinished greater than or equal to",
     "hanging !"
 
-}
+};
 
 #endif

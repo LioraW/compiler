@@ -1,33 +1,42 @@
 #include <iostream>
 #include <string>
-#include "tokenID.h"
+#include <fstream>
 
-using namespace std;
+#include "token.h"
+#include "testScanner.h"
+
 
 bool fileNameContainsDot(string FileName);
 string validateFileName(string fileName);
 
 int main(int argc, char **argv) {
-	
-    fstream file;
-	string word;
-    string inputFileName = "testFile.txt"
-    int lineNumber = 0;
-	
-	file.open(inputFileName);
+	string fileName;
 
-	if (file.is_open()) {
-		
-		while (file >> word) {
+    // If there is no argument
+    if (argc <= 1) {
+        
+        // open a temp file 
+        fileName = "output";
+        ofstream inputfile(fileName + ".sp2022", ios::trunc);
+        string text = "";
 
-			filter(word, lineNumber)
-		}
+        //read keyboard input into temp file
+        while (cin >> text && text != "EOF") {
+            inputfile << text << endl;
+        }
 
-	} else {
-		cerr << "Unable to open file: " << inputFileName << endl;
-	}   
+        inputfile.close();
 
-	file.close();
+    //else use the argument
+    } else {
+        fileName = validateFileName(argv[1]);
+    }
+    
+if (fileName != "") {
+
+
+       testScanner(fileName + ".sp2022");
+}
 
     
     return 0;
