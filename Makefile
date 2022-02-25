@@ -3,7 +3,7 @@ CXX=g++
 RM=rm -f
 CPPFLAGS = -g -std=c++11
 
-SRCS = main.cpp testScanner.cpp testScanner.h token.h
+SRCS = main.cpp testScanner.cpp testScanner.h token.h scanner.cpp scanner.h
 OBJS = $(subst .cc,.o,$(SRCS))
 
 all: main

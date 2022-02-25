@@ -1,3 +1,5 @@
+#ifndef FSATABLE_H
+#define FSATABLE_H
 #include "tokenID.h"
 
 const int numCharacters = 25;
@@ -15,4 +17,6 @@ const int table[last_state][numCharacters] = {
     { COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLNEQ_TK, COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,   COLN_TK,  COLN_TK,  COLN_TK,  COLN_TK,  }, // s10 (from :)
     { s2,       s11,      s4,       s5,       ID_TK,     ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,    ID_TK,     ID_TK,    ID_TK,    ID_TK,    ID_TK,    }, // s11 (from number after a letter or underscore) 
     
-}
+};
+
+#endif

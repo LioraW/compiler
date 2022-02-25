@@ -2,8 +2,8 @@
 #include <string>
 #include <fstream>
 
-#include "token.h"
 #include "testScanner.h"
+
 
 
 bool fileNameContainsDot(string FileName);
