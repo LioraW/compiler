@@ -4,10 +4,9 @@
 #include "token.h"
 #include "tokenID.h"
 #include "Characters.h"
+#include "scanner.h"
 
 using namespace std;
-
-string trim(const string str);
 
 // Token scanner(string line){
 
@@ -17,39 +16,8 @@ string trim(const string str);
 
 // }
 
-// void filter (string line, int lineNumber, bool openComment) {
-//     line = trim(line);
 
-//     int commentBeginNumber;
-//     int commentEndNumber;
-
-    
-//     for (int i = 0; i < line.size() - 1; i++) { // go until the second to last character in the line, because we need two #
-//         if (line[i] == '#' && line[i + 1] == '#'){ //check for comments
-            
-//             if (openComment){
-//                 commentBeginNumber = 0;
-//                 commentEndNumber = i + 1;
-//             } else {
-//                 commentBeginNumber = i + 1;
-//             }
-
-//             openComment = !openComment; //flip if the comment is closed on the same line
-//         }
-//     }
-
-//     if (openComment){
-//         commentEndNumber = line.size();
-//     }
-
-
-//     //line = line.substr(0, commentBeginNumber) + line.substr(commentEndNumber, line.size());
-
-//     cout << line << endl;
-
-// }
-
-void filter (string line, int lineNumber, bool openComment){
+string filter (string line, int lineNumber, bool& openComment){
     line = trim(line);
     string newString = "";
     for (int i = 0; i < line.size(); ++i ){
@@ -62,7 +30,7 @@ void filter (string line, int lineNumber, bool openComment){
             newString += line[i];
         }
     }
-    cout << newString << endl;
+    return newString;
 }
 
 //trim whitespace from both ends of a string

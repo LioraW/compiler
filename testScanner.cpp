@@ -11,15 +11,18 @@ using namespace std;
 void testScanner(string fileName) {
     
     fstream file;
-    string line;
+    string line, cleanLine;
     int numberLines = 0;
+    bool openComment = false;
+
         
     file.open(fileName);
 
     if (file.is_open()) {
         
         while (getline(file, line)) {
-            processLine(line, numberLines++);
+            cleanLine = filter(line, numberLines++, openComment);
+            cout << "Line " << numberLines << ":" << cleanLine << endl;
         }
 
     } else {
@@ -29,10 +32,4 @@ void testScanner(string fileName) {
     file.close();
     
     
-}
-
-void processLine (string line, int lineNumber) {
-    cout << "Line Number: " << lineNumber << ": ";
-    bool openComment = false;
-    filter(line, lineNumber, openComment);
 }
