@@ -5,16 +5,79 @@
 #include "tokenID.h"
 #include "Characters.h"
 #include "scanner.h"
+#include "FSAtable.h"
 
 using namespace std;
 
-// Token scanner(string line){
+Token scanner(string line, int lineNum, int& charNum, int lineLength){
 
-//     for (char c: line){
 
-//     }
+    int currentState = s1;
+    int nextState;
+    int startingChar = charNum; //save the first char of the token
+    string s = "";
+    Token token(currentState, s, lineNum, startingChar);
+    
+    char nextChar = line[startingChar];
 
-// }
+    while (currentState < 1000 && charNum < line.size()) {
+        s += nextChar;
+        
+        nextState = table[currentState][FSAColumn(nextChar)];
+
+        if (nextState < 0){ //if error state
+            token.resetAttributes(nextState, s, lineNum, startingChar);
+            return token;
+
+        } else if (nextState > 1000) { //if FINAL state 
+            if (nextState == ID_TK && isKeyword(s)) {
+                nextState = STR_TK; // TODO: find correct keyword token
+            } 
+
+            token.resetAttributes(nextState, s, lineNum, startingChar);
+            return token;
+
+        } else { // else its not final state
+            currentState = nextState;
+            charNum++;
+            // nextChar = charNum < line.size() ? line[charNum] : '\n';
+            if (charNum < line.size() - 1){
+                nextChar = line[charNum];
+            }
+           
+        }
+    }
+    return token;
+}
+
+bool isKeyword(string word) {
+
+    string keywords[] = {
+    "start",
+    "stop",
+    "repeat", 
+    "until", 
+    "whole", 
+    "label", 
+    "quit", 
+    "listen", 
+    "yell", 
+    "main", 
+    "portal", 
+    "if", 
+    "then", 
+    "pick", 
+    "declare", 
+    "assign",
+    "proc",
+};
+
+    for (string keyword: keywords) {
+        if (word == keyword)
+            return true;
+    }
+    return false;
+}
 
 
 string filter (string line, int lineNumber, bool& openComment){
