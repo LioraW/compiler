@@ -19,17 +19,16 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     Token token(currentState, s, lineNum, startingChar);
     
     char nextChar = line[startingChar];
-
-    while (currentState < 1000 && charNum < line.size()) {
-        s += nextChar;
+    
+    while (!isFinalState(currentState) && charNum < line.length()) {
+        //s += nextChar;
         
         nextState = table[currentState][FSAColumn(nextChar)];
 
-        if (nextState < 0){ //if error state
-            token.resetAttributes(nextState, s, lineNum, startingChar);
-            return token;
+        cout << nextState << endl;
 
-        } else if (nextState > 1000) { //if FINAL state 
+        if (isFinalState(nextState)){ //if error state or FINAL state
+    
             if (nextState == ID_TK && isKeyword(s)) {
                 nextState = STR_TK; // TODO: find correct keyword token
             } 
@@ -38,16 +37,24 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
             return token;
 
         } else { // else its not final state
+            
             currentState = nextState;
+            s+= nextChar;
             charNum++;
-            // nextChar = charNum < line.size() ? line[charNum] : '\n';
-            if (charNum < line.size() - 1){
+
+            // nextChar = charNum < line.length() ? line[charNum] : '\n';
+            if (charNum < line.length() - 1){
                 nextChar = line[charNum];
             }
-           
+            // s += nextChar; //having this here keeps the last token
+
         }
     }
     return token;
+}
+
+bool isFinalState(int state){
+    return state > 1000 || state < 0;
 }
 
 bool isKeyword(string word) {
@@ -81,9 +88,12 @@ bool isKeyword(string word) {
 
 
 string filter (string line, int lineNumber, bool& openComment){
-    line = trim(line);
     string newString = "";
-    for (int i = 0; i < line.size(); ++i ){
+    int i = 0;
+    // while(isspace(line[i])){
+    //     i++;
+    // }
+    for ( ; i < line.length(); ++i ){
         //check for a comment starting or ending
         if (line[i] == '#' && line[i - 1] == '#') { //if the current char and the one before is #, its a comment 
             openComment = !openComment;
@@ -94,17 +104,6 @@ string filter (string line, int lineNumber, bool& openComment){
         }
     }
     return newString;
-}
-
-//trim whitespace from both ends of a string
-string trim(const string str) {
-    // from https://stackoverflow.com/questions/25829143/trim-whitespace-from-a-string
-    size_t first = str.find_first_not_of(' ');
-    if (string::npos == first) {
-        return str;
-    }
-    size_t last = str.find_last_not_of(' ');
-    return str.substr(first, (last - first + 1));
 }
 
 int FSAColumn(char ch) {

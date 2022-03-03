@@ -11,6 +11,7 @@ string trim(const string str);
 string filter (string line, int lineNumber, bool& openComment);
 Token scanner(string line, int lineNum, int& charNum, int lineLength);
 bool isKeyword(string word); 
+bool isFinalState(int state);
 int FSAColumn(char ch);
 
 #endif

@@ -91,7 +91,7 @@ string keywords[] = {
 
             cout << "Line " << numberLines << ":" << cleanLine << endl;
 
-            while (charNum < cleanLine.size()) {
+            while (charNum < cleanLine.length()) {
                 
                 //skip spaces
                 if (isspace(line[charNum])){
@@ -99,7 +99,7 @@ string keywords[] = {
                 }
                 
                 //get next token
-                Token token = scanner(cleanLine, numberLines, charNum, line.size());
+                Token token = scanner(cleanLine, numberLines, charNum, line.length());
                 
                 if (token.isError()) {
                     cout << errorNames[abs(token.getTokenId())] << ": " << token.getTokenInstance() << " |";

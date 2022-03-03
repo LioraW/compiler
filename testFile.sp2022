@@ -1,1 +1,3 @@
-one word: = != thing
+word:==thing
+##one word: != thing##
+##another!=*word+##
