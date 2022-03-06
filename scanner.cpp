@@ -17,22 +17,20 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     int startingChar = charNum; //save the first char of the token
     string s = "";
     Token token(currentState, s, lineNum, startingChar);
+    bool openComment = false;
     
-    char nextChar = line[startingChar];
+    char nextChar = filter(line, lineNum, charNum, openComment);
     
-    while (!isFinalState(currentState) && charNum < line.length()) {
-        //s += nextChar;
+    while (!isFinalState(currentState) && charNum < lineLength /* && charNum < line.length() */) {
         
         nextState = table[currentState][FSAColumn(nextChar)];
-
-        cout << nextState << endl;
 
         if (isFinalState(nextState)){ //if error state or FINAL state
     
             if (nextState == ID_TK && isKeyword(s)) {
                 nextState = STR_TK; // TODO: find correct keyword token
             } 
-
+            
             token.resetAttributes(nextState, s, lineNum, startingChar);
             return token;
 
@@ -43,10 +41,9 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
             charNum++;
 
             // nextChar = charNum < line.length() ? line[charNum] : '\n';
-            if (charNum < line.length() - 1){
-                nextChar = line[charNum];
+            if (charNum < line.length() - 1) {
+                nextChar = filter(line, lineNum, charNum, openComment);
             }
-            // s += nextChar; //having this here keeps the last token
 
         }
     }
@@ -86,24 +83,37 @@ bool isKeyword(string word) {
     return false;
 }
 
-
-string filter (string line, int lineNumber, bool& openComment){
+char filter (string line, int lineNumber, int& charNum, bool& openComment){
     string newString = "";
-    int i = 0;
-    // while(isspace(line[i])){
-    //     i++;
-    // }
-    for ( ; i < line.length(); ++i ){
-        //check for a comment starting or ending
-        if (line[i] == '#' && line[i - 1] == '#') { //if the current char and the one before is #, its a comment 
-            openComment = !openComment;
-        }
-        //if its not an open comment, append the words back to the line
-        if (!openComment && line[i] != '#') {
-            newString += line[i];
-        }
+
+    //skip spaces
+    while (isspace(line[charNum])){
+        charNum++;
     }
-    return newString;
+
+    //see if there are comments
+    if (charNum < line.length() && line[charNum] == '#' && line[charNum + 1] == '#') { //if the current char and the one before is #, its a comment 
+            openComment = !openComment;
+    }
+    //while there is an open comment, skip all the lines
+    while (openComment){
+        if (charNum < line.length() && line[charNum] == '#' && line[charNum + 1] == '#'){
+            openComment = false; //will add one more to charNum 
+        }
+        charNum++;
+    }
+    
+    // for ( ; i < line.length(); ++i ){
+    //     //check for a comment starting or ending
+    //     if (line[i] == '#' && line[i - 1] == '#') { //if the current char and the one before is #, its a comment 
+    //         openComment = !openComment;
+    //     }
+    //     //if its not an open comment, append the words back to the line
+    //     if (!openComment && line[i] != '#') {
+    //         newString += line[i];
+    //     }
+    // }
+    return line[charNum];
 }
 
 int FSAColumn(char ch) {

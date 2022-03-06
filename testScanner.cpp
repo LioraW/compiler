@@ -69,8 +69,6 @@ string keywords[] = {
     "proc",
 };
 
-
-    
     fstream file;
     string line, cleanLine;
     int numberLines = 0;
@@ -82,24 +80,23 @@ string keywords[] = {
 
     if (file.is_open()) {
         
-        while (getline(file, line)) {
+        while (getline(file, line) && !file.eof()) {
             charNum = 0;
             
-
             // scanning commence
-            cleanLine = filter(line, numberLines++, openComment);
+            //cleanLine = filter(file, line, numberLines++, charNum, openComment);
 
             cout << "Line " << numberLines << ":" << cleanLine << endl;
 
-            while (charNum < cleanLine.length()) {
+            while (charNum < line.length() && !file.eof()) {
                 
                 //skip spaces
-                if (isspace(line[charNum])){
-                    charNum++;
-                }
+                // while (isspace(line[charNum])){
+                //     charNum++;
+                // }
                 
                 //get next token
-                Token token = scanner(cleanLine, numberLines, charNum, line.length());
+                Token token = scanner(line, numberLines++, charNum, line.length());
                 
                 if (token.isError()) {
                     cout << errorNames[abs(token.getTokenId())] << ": " << token.getTokenInstance() << " |";

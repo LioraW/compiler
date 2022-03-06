@@ -8,7 +8,7 @@ using namespace std;
 
 string trim(const string str);
 
-string filter (string line, int lineNumber, bool& openComment);
+char filter ( string line, int lineNumber, int& charNum, bool& openComment);
 Token scanner(string line, int lineNum, int& charNum, int lineLength);
 bool isKeyword(string word); 
 bool isFinalState(int state);
