@@ -1,3 +1,3 @@
 word:==thing
-##one word: != thing##
-##another!=*word+##
+!= ##one word: != thing##
+another line

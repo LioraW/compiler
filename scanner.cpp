@@ -21,7 +21,7 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     
     char nextChar = filter(line, lineNum, charNum, openComment);
     
-    while (!isFinalState(currentState) && charNum < lineLength /* && charNum < line.length() */) {
+    while (!isFinalState(currentState) && charNum < line.length() /* && charNum < line.length() */) {
         
         nextState = table[currentState][FSAColumn(nextChar)];
 
@@ -35,17 +35,17 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
             return token;
 
         } else { // else its not final state
-            
             currentState = nextState;
-            s+= nextChar;
+            s += nextChar;
+            // cout << s << endl;
             charNum++;
-
-            // nextChar = charNum < line.length() ? line[charNum] : '\n';
-            if (charNum < line.length() - 1) {
-                nextChar = filter(line, lineNum, charNum, openComment);
-            }
-
+            nextChar = filter(line, lineNum, charNum, openComment);
+            
         }
+    }
+    if (charNum >= line.length()){
+        cout << "end of line";
+        token.resetAttributes(nextState, s, lineNum, startingChar);
     }
     return token;
 }
@@ -84,7 +84,6 @@ bool isKeyword(string word) {
 }
 
 char filter (string line, int lineNumber, int& charNum, bool& openComment){
-    string newString = "";
 
     //skip spaces
     while (isspace(line[charNum])){
@@ -92,27 +91,21 @@ char filter (string line, int lineNumber, int& charNum, bool& openComment){
     }
 
     //see if there are comments
-    if (charNum < line.length() && line[charNum] == '#' && line[charNum + 1] == '#') { //if the current char and the one before is #, its a comment 
+    if (charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#') { //if the current char and the one before is #, its a comment 
             openComment = !openComment;
+            charNum += 2;
     }
-    //while there is an open comment, skip all the lines
-    while (openComment){
-        if (charNum < line.length() && line[charNum] == '#' && line[charNum + 1] == '#'){
-            openComment = false; //will add one more to charNum 
+    //skip all the characters between the open comments
+    while (openComment && charNum < line.length()){
+        if (charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#'){
+            openComment = !openComment;
+            charNum += 2;
+            break;
         }
         charNum++;
     }
+   
     
-    // for ( ; i < line.length(); ++i ){
-    //     //check for a comment starting or ending
-    //     if (line[i] == '#' && line[i - 1] == '#') { //if the current char and the one before is #, its a comment 
-    //         openComment = !openComment;
-    //     }
-    //     //if its not an open comment, append the words back to the line
-    //     if (!openComment && line[i] != '#') {
-    //         newString += line[i];
-    //     }
-    // }
     return line[charNum];
 }
 

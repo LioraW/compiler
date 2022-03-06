@@ -75,12 +75,11 @@ string keywords[] = {
     int charNum = 0;
     bool openComment = false;
 
-        
     file.open(fileName);
 
     if (file.is_open()) {
         
-        while (getline(file, line) && !file.eof()) {
+        while (getline(file, line)) {
             charNum = 0;
             
             // scanning commence
@@ -88,8 +87,7 @@ string keywords[] = {
 
             cout << "Line " << numberLines << ":" << cleanLine << endl;
 
-            while (charNum < line.length() && !file.eof()) {
-                
+            while (charNum < line.length()) {
                 //skip spaces
                 // while (isspace(line[charNum])){
                 //     charNum++;
@@ -106,12 +104,14 @@ string keywords[] = {
                 } else if (token.isFinal()) {
                     cout << tokenNames[token.getTokenId() - ID_TK] << "(" << token.getTokenInstance() << ") | ";
                 } else {
-                    cout << "State error" << endl;
+                    cout << "State error: " << token.getTokenId() << "( " << token.getTokenInstance() << " )" << endl;
                 }
-                
             }
             cout << endl;
 
+            if (file.eof()){
+                break;
+            }
         }
     
     } else {
