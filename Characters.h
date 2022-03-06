@@ -26,6 +26,7 @@ enum character {
     mod,
     semiColon,
     whiteSpace,
+    newLine,
     illegalCharacter,
     lastCharacter,
 };

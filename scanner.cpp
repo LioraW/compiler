@@ -21,7 +21,7 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     
     char nextChar = filter(line, lineNum, charNum, openComment);
     
-    while (!isFinalState(currentState) && charNum < line.length() /* && charNum < line.length() */) {
+    while (!isFinalState(currentState) && charNum < line.length()) {
         
         nextState = table[currentState][FSAColumn(nextChar)];
 
@@ -151,6 +151,8 @@ int FSAColumn(char ch) {
             return mod;
         case ';':
             return semiColon;
+        case '\n':
+            return newLine;
         default:
             if ('a' <= ch && 'z' >= ch){
                 return lowercaseLetter;
