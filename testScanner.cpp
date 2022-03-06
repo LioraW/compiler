@@ -36,20 +36,6 @@ string tokenNames[] = {
     "Semicolon",
     "Left Bracket",
     "Right Bracket",
-    "End of line",
-
-};
-
-string errorNames[] = {
-    "Whitespace is not a token",
-    "ID cannot start with a number or a capital letter",
-    "unfished assignment (unrecongnized character after = )",
-    "unfinished less than or equal to ",
-    "unfinished greater than or equal to",
-    "hanging !",
-};
-
-string keywords[] = {
     "start",
     "stop",
     "repeat", 
@@ -67,10 +53,21 @@ string keywords[] = {
     "declare", 
     "assign",
     "proc",
+    "End of line",
+
+};
+
+string errorNames[] = {
+    "Whitespace is not a token",
+    "ID cannot start with a number or a capital letter",
+    "unfished assignment (unrecongnized character after = )",
+    "unfinished less than or equal to ",
+    "unfinished greater than or equal to",
+    "hanging !",
 };
 
     fstream file;
-    string line, cleanLine;
+    string line;
     int numberLines = 0;
     int charNum = 0;
     bool openComment = false;
@@ -81,20 +78,12 @@ string keywords[] = {
         
         while (getline(file, line)) {
             charNum = 0;
-            
-            // scanning commence
-            //cleanLine = filter(file, line, numberLines++, charNum, openComment);
 
-            cout << "Line " << numberLines << ":" << cleanLine << endl;
+            cout << "Line " << ++numberLines << ":" << line << endl;
 
             while (charNum < line.length()) {
-                //skip spaces
-                // while (isspace(line[charNum])){
-                //     charNum++;
-                // }
-                
                 //get next token
-                Token token = scanner(line, numberLines++, charNum, line.length());
+                Token token = scanner(line + '\n', numberLines, charNum, line.length());
                 
                 if (token.isError()) {
                     cout << errorNames[abs(token.getTokenId())] << ": " << token.getTokenInstance() << " |";

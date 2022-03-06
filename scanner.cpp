@@ -10,26 +10,29 @@
 using namespace std;
 
 Token scanner(string line, int lineNum, int& charNum, int lineLength){
-
-
     int currentState = s1;
     int nextState;
-    int startingChar = charNum; //save the first char of the token
+    int startingChar = charNum; //save the position of the first char of the token
+    
     string s = "";
     Token token(currentState, s, lineNum, startingChar);
     bool openComment = false;
     
     char nextChar = filter(line, lineNum, charNum, openComment);
     
-    while (!isFinalState(currentState) && charNum < line.length()) {
+    while (!isFinalState(currentState) &&  charNum < line.length()) {
         
         nextState = table[currentState][FSAColumn(nextChar)];
 
         if (isFinalState(nextState)){ //if error state or FINAL state
     
-            if (nextState == ID_TK && isKeyword(s)) {
-                nextState = STR_TK; // TODO: find correct keyword token
-            } 
+            if (nextState == ID_TK) {
+                if (isKeyword(s)){
+                    nextState = STR_TK; // TODO: find  keyword token
+                }
+            } else {
+                s += filter(line, lineNum, ++charNum, openComment); //bandaid to add the second character of double operators
+            }
             
             token.resetAttributes(nextState, s, lineNum, startingChar);
             return token;
@@ -43,10 +46,13 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
             
         }
     }
+
+    //deal with the last token on the line
     if (charNum >= line.length()){
-        cout << "end of line";
+        nextState = table[currentState][FSAColumn('\n')];
         token.resetAttributes(nextState, s, lineNum, startingChar);
     }
+
     return token;
 }
 
@@ -97,7 +103,7 @@ char filter (string line, int lineNumber, int& charNum, bool& openComment){
     }
     //skip all the characters between the open comments
     while (openComment && charNum < line.length()){
-        if (charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#'){
+        if (charNum < line.length() - 2 && line[charNum] == '#' && line[charNum + 1] == '#'){
             openComment = !openComment;
             charNum += 2;
             break;
