@@ -25,16 +25,16 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
 
         if (isFinalState(nextState)){
 
-            if ( !(nextState == ID_TK || nextState == NUM_TK)/*isDoubleOperator(nextState)*/){
-                s += nextChar; //keep next character and move on to the next one
-                charNum++;
-            } else { 
+            if (nextState == ID_TK || nextState == NUM_TK) {
                 if (isspace(nextChar)){
                     charNum++;
                 }
                 if (isKeyword(s)){
                     nextState = STR_TK; //TODO find keyword token
                 }
+            } else {
+                s += nextChar; //keep next character and move on to the next one
+                charNum++;
             }
             
             token.resetAttributes(nextState, s, lineNum, startingChar);
@@ -43,7 +43,6 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
         } else { // else its not final state
             currentState = nextState;
             s += nextChar;
-            
             charNum++;
             nextChar = filter(line, lineNum, charNum, openComment);
             
@@ -61,20 +60,6 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
 
 bool isFinalState(int state){
     return state > 1000 || state < 0;
-}
-bool isDoubleOperator(int state){
-    int doubleOperators[] = {
-        EQ_TK,   // == 
-        NTEQ_TK, // != 
-        GRTE_TK, // >=
-        LTE_TK,  // <= 
-        COLNEQ_TK, // :=
-    };
-    for (int op: doubleOperators){
-        if (state == op)
-            return true;
-    }
-    return false;
 }
 
 bool isKeyword(string word) {
