@@ -21,25 +21,20 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     char nextChar = filter(line, lineNum, charNum, openComment);
     
     while (!isFinalState(currentState) &&  charNum < line.length()) { //while we havent found the end of a token or the end of the line yet
-        
         nextState = table[currentState][FSAColumn(nextChar)]; 
 
         if (isFinalState(nextState)){
-    
-            if (nextState == ID_TK) {
-                
-                if (isspace(nextChar)){ //ignore the whitespace that caused the end of this identifier
+
+            if ( !(nextState == ID_TK || nextState == NUM_TK)/*isDoubleOperator(nextState)*/){
+                s += nextChar; //keep next character and move on to the next one
+                charNum++;
+            } else { 
+                if (isspace(nextChar)){
                     charNum++;
                 }
-
                 if (isKeyword(s)){
-                   nextState = STR_TK; // TODO: find  keyword token 
+                    nextState = STR_TK; //TODO find keyword token
                 }
-            
-            } else if (isDoubleOperator(nextState)){
-                //keep next character and move on to the next one
-                s += nextChar; 
-                charNum++; 
             }
             
             token.resetAttributes(nextState, s, lineNum, startingChar);
@@ -56,7 +51,7 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     }
 
     //deal with the last token on the line
-    if (charNum >= line.length()){
+    if (charNum >= line.length()) {
         nextState = table[currentState][FSAColumn('\n')];
         token.resetAttributes(nextState, s, lineNum, startingChar);
     }
@@ -111,14 +106,14 @@ bool isKeyword(string word) {
     return false;
 }
 
-//comment character starting at the current charNum
+//if the current char and the one after it is #, its a comment 
 bool commentCharacter(string line, int charNum){
-    //if the current char and the one after it is #, its a comment 
     return charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#';
 }
 
 char filter (string line, int lineNumber, int& charNum, bool& openComment){
 
+    //check for comment characters
     if (commentCharacter(line, charNum)) { 
         openComment = !openComment;
         charNum += 2;
@@ -136,9 +131,9 @@ char filter (string line, int lineNumber, int& charNum, bool& openComment){
     }
     
     //skip spaces
-    if (charNum > 1 && commentCharacter(line, charNum - 2) && isspace(line[charNum]) || //was just a comment and now a space
-        charNum > 0 && isspace(line[charNum - 1]) ||                                    //the previous char was a space
-        charNum == 0) {                                                                 //first character
+    if (charNum > 1 && commentCharacter(line, charNum - 2) && isspace(line[charNum]) || // was just a comment and now a space
+        charNum > 0 && isspace(line[charNum - 1]) ||                                    // the previous char was a space
+        charNum == 0) {                                                                 // first character
         while (isspace(line[charNum])){
             charNum++;
         }
