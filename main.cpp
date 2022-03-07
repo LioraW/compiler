@@ -4,8 +4,6 @@
 
 #include "testScanner.h"
 
-
-
 bool fileNameContainsDot(string FileName);
 string validateFileName(string fileName);
 
@@ -22,7 +20,7 @@ int main(int argc, char **argv) {
 
         //read keyboard input into temp file
         while (cin >> text && text != "EOF") {
-            inputfile << text << endl;
+            inputfile << text;
         }
 
         inputfile.close();
@@ -33,12 +31,9 @@ int main(int argc, char **argv) {
     }
     
 if (fileName != "") {
-
-
        testScanner(fileName + ".sp2022");
 }
 
-    
     return 0;
 }
 

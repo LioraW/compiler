@@ -52,7 +52,7 @@ string tokenNames[] = {
     "pick", 
     "declare", 
     "assign",
-    "proc",
+    "Proc",
     "End of line",
 
 };
@@ -76,30 +76,28 @@ string errorNames[] = {
 
     if (file.is_open()) {
         
-        while (getline(file, line)) {
+        while (getline(file, line)) { 
+            numberLines++;
             charNum = 0;
-
-            cout << "Line " << ++numberLines << ":" << line << endl;
-
             while (charNum < line.length()) {
-                //get next token
+
                 Token token = scanner(line, charNum, openComment, numberLines);
                 
                 if (token.isError()) {
 
                     if (token.getTokenId() != WS_E) { //whitespace error is not really an error, it's just an edge case
-                        cout << errorNames[abs(token.getTokenId()) - 1] << ": " << token.getTokenInstance() << token.getCharNumber() <<  " |";
+                        cout << "SCANNER ERROR: " << errorNames[abs(token.getTokenId()) - 1] << ": line " << token.getLineNumber() << endl;
                         file.close();
                         return;
                     } 
                     
                 } else if (token.isFinal()) {
-                    cout << "| " << tokenNames[token.getTokenId() - ID_TK] << "(" << token.getTokenInstance() << ") ";
+                    cout << tokenNames[token.getTokenId() - ID_TK] << "(" << token.getTokenInstance() << ") " << " line " << token.getLineNumber() << endl;
                 } else {
                     cout << "State error: " << token.getTokenId() << "( " << token.getTokenInstance() << " )" << endl;
                 }
             }
-            cout << endl << endl;
+            cout << endl;
 
             if (file.eof()){
                 break;

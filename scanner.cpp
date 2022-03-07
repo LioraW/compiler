@@ -26,11 +26,11 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum){
 
             // cover all edge cases: IDs, keywords, single operators that could be part of a double
             if (nextState == ID_TK || nextState == NUM_TK) {
-                if (isspace(nextChar)){
+                if (isspace(nextChar)) {
                     charNum++;
                 }
-                if (isKeyword(s)){
-                    nextState = STR_TK; //TODO find keyword token
+                if (keywordIndex(s) != -1) {
+                    nextState = STR_TK + keywordIndex(s);
                 }
             } else if (nextState != ASGN_TK && nextState != COLN_TK) {  
                 s += nextChar; //keep next character and move on to the next one
@@ -63,7 +63,7 @@ bool isFinalState(int state){
     return state > 1000 || state < 0;
 }
 
-bool isKeyword(string word) {
+int keywordIndex(string word) {
 
     string keywords[] = {
     "start",
@@ -84,20 +84,21 @@ bool isKeyword(string word) {
     "assign",
     "proc",
 };
-
-    for (string keyword: keywords) {
+    int i = 0;
+    for (const string keyword : keywords) {
         if (word == keyword)
-            return true;
+            return i;
+        i++;
     }
-    return false;
+    return -1;
 }
 
 //if the current char and the one after it is #, its a comment 
-bool commentCharacter(string line, int charNum){
+bool commentCharacter(string line, int charNum) {
     return charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#';
 }
 
-char filter (string line, int& charNum, bool& openComment){
+char filter (string line, int& charNum, bool& openComment) {
 
     //check for comment characters
     if (commentCharacter(line, charNum)) { 
@@ -117,8 +118,8 @@ char filter (string line, int& charNum, bool& openComment){
     }
     
     //skip spaces
-    if (charNum > 1 && commentCharacter(line, charNum - 2) && isspace(line[charNum]) || // was just a comment and now a space
-        charNum > 0 && isspace(line[charNum - 1]) ||                                    // the previous char was a space
+    if (charNum > 1 && commentCharacter(line, charNum - 2) && isspace(line[charNum]) || // was just a comment and now a space OR
+        charNum > 0 && isspace(line[charNum - 1]) ||                                    // the previous char was a space OR
         charNum == 0) {                                                                 // first character
         while (isspace(line[charNum])){
             charNum++;

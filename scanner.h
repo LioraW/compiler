@@ -8,7 +8,7 @@ using namespace std;
 
 char filter   ( string line, int& charNum, bool& openComment);
 Token scanner ( string line, int& charNum, bool& openComment, int lineNum);
-bool isKeyword(string word); 
+int keywordIndex(string word); 
 bool isFinalState(int state);
 int FSAColumn(char ch);
 
