@@ -9,7 +9,7 @@
 
 using namespace std;
 
-Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& openComment){
+Token scanner(string line, int& charNum, bool& openComment, int lineNum){
     int currentState = s1;
     int nextState;
     int startingChar = charNum; //save the position of the first char of the token
@@ -17,13 +17,14 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& open
     string s = "";
     Token token(currentState, s, lineNum, startingChar);
     
-    char nextChar = filter(line, lineNum, charNum, openComment);
+    char nextChar = filter(line, charNum, openComment);
     
     while (!isFinalState(currentState) &&  charNum < line.length()) { //while we havent found the end of a token or the end of the line yet
         nextState = table[currentState][FSAColumn(nextChar)]; 
 
         if (isFinalState(nextState)){
 
+            // cover all edge cases: IDs, keywords, single operators that could be part of a double
             if (nextState == ID_TK || nextState == NUM_TK) {
                 if (isspace(nextChar)){
                     charNum++;
@@ -31,11 +32,12 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& open
                 if (isKeyword(s)){
                     nextState = STR_TK; //TODO find keyword token
                 }
-            } else {
+            } else if (nextState != ASGN_TK && nextState != COLN_TK) {  
                 s += nextChar; //keep next character and move on to the next one
                 charNum++;
             }
             
+            //set and return the token
             token.resetAttributes(nextState, s, lineNum, startingChar);
             return token;
 
@@ -43,7 +45,7 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& open
             currentState = nextState;
             s += nextChar;
             charNum++;
-            nextChar = filter(line, lineNum, charNum, openComment);
+            nextChar = filter(line, charNum, openComment);
             
         }
     }
@@ -95,7 +97,7 @@ bool commentCharacter(string line, int charNum){
     return charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#';
 }
 
-char filter (string line, int lineNumber, int& charNum, bool& openComment){
+char filter (string line, int& charNum, bool& openComment){
 
     //check for comment characters
     if (commentCharacter(line, charNum)) { 

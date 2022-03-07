@@ -6,11 +6,8 @@
 
 using namespace std;
 
-string trim(const string str);
-
-char filter ( string line, int lineNumber, int& charNum, bool& openComment);
-Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& openComment);
-bool isDoubleOperator(int state);
+char filter   ( string line, int& charNum, bool& openComment);
+Token scanner ( string line, int& charNum, bool& openComment, int lineNum);
 bool isKeyword(string word); 
 bool isFinalState(int state);
 int FSAColumn(char ch);
