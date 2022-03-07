@@ -20,7 +20,7 @@ int main(int argc, char **argv) {
 
         //read keyboard input into temp file
         while (cin >> text && text != "EOF") {
-            inputfile << text;
+            inputfile << text << " ";
         }
 
         inputfile.close();

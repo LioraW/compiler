@@ -16,13 +16,14 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum){
     
     string s = "";
     Token token(currentState, s, lineNum, startingChar);
+    line = line + '\n';
     
     char nextChar = filter(line, charNum, openComment);
     
     while (!isFinalState(currentState) &&  charNum < line.length()) { //while we havent found the end of a token or the end of the line yet
         nextState = table[currentState][FSAColumn(nextChar)]; 
 
-        if (isFinalState(nextState)){
+        if (isFinalState(nextState)) {
 
             // cover all edge cases: IDs, keywords, single operators that could be part of a double
             if (nextState == ID_TK || nextState == NUM_TK) {
@@ -32,7 +33,7 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum){
                 if (keywordIndex(s) != -1) {
                     nextState = STR_TK + keywordIndex(s);
                 }
-            } else if (nextState != ASGN_TK && nextState != COLN_TK) {  
+            } else if (nextState != ASGN_TK && nextState != COLN_TK) {  //these are double operators that have characters that could be part of single operators too
                 s += nextChar; //keep next character and move on to the next one
                 charNum++;
             }
@@ -46,7 +47,6 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum){
             s += nextChar;
             charNum++;
             nextChar = filter(line, charNum, openComment);
-            
         }
     }
 
@@ -98,6 +98,8 @@ bool commentCharacter(string line, int charNum) {
     return charNum < line.length() - 1 && line[charNum] == '#' && line[charNum + 1] == '#';
 }
 
+/* skips spaces and comments by incrementing charNum and altering openComment
+    returns the next relavent character */
 char filter (string line, int& charNum, bool& openComment) {
 
     //check for comment characters
@@ -129,6 +131,7 @@ char filter (string line, int& charNum, bool& openComment) {
     return line[charNum];
 }
 
+//returns the column of the FSA table that corresponds to the given character
 int FSAColumn(char ch) {
     switch(ch) {
         case '_':

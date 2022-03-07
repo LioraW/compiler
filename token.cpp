@@ -1,6 +1,7 @@
 #include <string>
 #include <math.h>
 #include "token.h"
+#include "tokenID.h"
 using namespace std;
 
 Token::Token(int tokenId, string tokenInstance, int lineNumber, int charNumber) {
@@ -28,6 +29,15 @@ int Token::getLineNumber(){
 }
 int Token::getCharNumber(){
     return charNumber; 
+}
+
+string Token::getTokenDescription() {
+    if (this->isFinal()){
+        return tokenNames[this->getTokenId() - ID_TK]; 
+    } else {
+        return errorNames[abs(this->getTokenId()) - 1];
+    }
+    
 }
 
 bool Token::isFinal() {

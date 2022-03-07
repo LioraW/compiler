@@ -1,9 +1,9 @@
-
 #ifndef TESTSCANNER_H
 #define TESTSCANNER_H
 
 #include <string>
-#include <iostream>
+
+#include "token.h"
 
 using namespace std;
 
