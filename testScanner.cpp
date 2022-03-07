@@ -83,7 +83,7 @@ string errorNames[] = {
 
             while (charNum < line.length()) {
                 //get next token
-                Token token = scanner(line + '\n', numberLines, charNum, line.length());
+                Token token = scanner(line, numberLines, charNum, line.length());
                 
                 if (token.isError()) {
                     cout << errorNames[abs(token.getTokenId())] << ": " << token.getTokenInstance() << " |";
@@ -96,7 +96,7 @@ string errorNames[] = {
                     cout << "State error: " << token.getTokenId() << "( " << token.getTokenInstance() << " )" << endl;
                 }
             }
-            cout << endl;
+            cout << endl << endl;
 
             if (file.eof()){
                 break;

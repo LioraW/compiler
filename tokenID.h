@@ -31,7 +31,7 @@ enum tokenID {
     //ASSIGNMENT
     ASGN_TK, // =  
     COLN_TK,
-    COLNEQ_TK,
+    COLNEQ_TK, // :=
     
     //MATH
     PLUS_TK,

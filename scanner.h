@@ -10,6 +10,7 @@ string trim(const string str);
 
 char filter ( string line, int lineNumber, int& charNum, bool& openComment);
 Token scanner(string line, int lineNum, int& charNum, int lineLength);
+bool isDoubleOperator(int state);
 bool isKeyword(string word); 
 bool isFinalState(int state);
 int FSAColumn(char ch);

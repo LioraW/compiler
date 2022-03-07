@@ -20,18 +20,19 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
     
     char nextChar = filter(line, lineNum, charNum, openComment);
     
-    while (!isFinalState(currentState) &&  charNum < line.length()) {
+    while (!isFinalState(currentState) &&  charNum < line.length()) { //while we havent found the end of a token or the end of the line yet
         
-        nextState = table[currentState][FSAColumn(nextChar)];
+        nextState = table[currentState][FSAColumn(nextChar)]; 
 
-        if (isFinalState(nextState)){ //if error state or FINAL state
+        if (isFinalState(nextState)){
     
-            if (nextState == ID_TK) {
-                if (isKeyword(s)){
-                    nextState = STR_TK; // TODO: find  keyword token
-                }
-            } else {
-                s += filter(line, lineNum, ++charNum, openComment); //bandaid to add the second character of double operators
+            if (nextState == ID_TK && isKeyword(s)) {
+                nextState = STR_TK; // TODO: find  keyword token 
+            
+            } else if (isDoubleOperator(nextState)){
+                //keep next character and move on to the next one
+                s += nextChar; 
+                charNum++; 
             }
             
             token.resetAttributes(nextState, s, lineNum, startingChar);
@@ -40,7 +41,7 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
         } else { // else its not final state
             currentState = nextState;
             s += nextChar;
-            // cout << s << endl;
+            
             charNum++;
             nextChar = filter(line, lineNum, charNum, openComment);
             
@@ -58,6 +59,20 @@ Token scanner(string line, int lineNum, int& charNum, int lineLength){
 
 bool isFinalState(int state){
     return state > 1000 || state < 0;
+}
+bool isDoubleOperator(int state){
+    int doubleOperators[] = {
+        EQ_TK,   // == 
+        NTEQ_TK, // != 
+        GRTE_TK, // >=
+        LTE_TK,  // <= 
+        COLNEQ_TK, // :=
+    };
+    for (int op: doubleOperators){
+        if (state == op)
+            return true;
+    }
+    return false;
 }
 
 bool isKeyword(string word) {
@@ -110,8 +125,7 @@ char filter (string line, int lineNumber, int& charNum, bool& openComment){
         }
         charNum++;
     }
-   
-    
+    cout << line[charNum] << endl;
     return line[charNum];
 }
 
