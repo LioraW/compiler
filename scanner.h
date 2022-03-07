@@ -9,7 +9,7 @@ using namespace std;
 string trim(const string str);
 
 char filter ( string line, int lineNumber, int& charNum, bool& openComment);
-Token scanner(string line, int lineNum, int& charNum, int lineLength);
+Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& openComment);
 bool isDoubleOperator(int state);
 bool isKeyword(string word); 
 bool isFinalState(int state);

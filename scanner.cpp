@@ -9,14 +9,13 @@
 
 using namespace std;
 
-Token scanner(string line, int lineNum, int& charNum, int lineLength){
+Token scanner(string line, int lineNum, int& charNum, int lineLength, bool& openComment){
     int currentState = s1;
     int nextState;
     int startingChar = charNum; //save the position of the first char of the token
     
     string s = "";
     Token token(currentState, s, lineNum, startingChar);
-    bool openComment = false;
     
     char nextChar = filter(line, lineNum, charNum, openComment);
     

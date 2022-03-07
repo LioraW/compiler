@@ -83,7 +83,7 @@ string errorNames[] = {
 
             while (charNum < line.length()) {
                 //get next token
-                Token token = scanner(line, numberLines, charNum, line.length());
+                Token token = scanner(line, numberLines, charNum, line.length(), openComment);
                 
                 if (token.isError()) {
 
