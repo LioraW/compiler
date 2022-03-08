@@ -28,7 +28,7 @@ void testScanner(string fileName) {
 
                 Token token = scanner(line, charNum, openComment, numberLines);
                 
-                if (token.isError() && token.getTokenId() != WS_E) { //whitespace error is not really an error, it's just an edge case
+                if (token.isError() && token.getTokenId() != WS_E) {
                     cout << "SCANNER ERROR: " << token.getTokenDescription() << ": line " << token.getLineNumber() << endl;
                     file.close();
                     return;

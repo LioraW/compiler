@@ -3,8 +3,6 @@
 #include <string>
 using namespace std;
 
-
-
 class Token {
     private:
         int tokenId;
@@ -69,7 +67,7 @@ class Token {
 
     public:
         Token(int tokenId, string tokenInstance, int lineNumber, int charNumber);
-        void resetAttributes(int tokenId, string tokenInstance, int lineNumber, int charNumber);
+        void resetAttributes(int tokenId, string tokenInstance, int lineNumber, int charNumber); //setter for all details
         
         int getTokenId();
         string getTokenInstance();
