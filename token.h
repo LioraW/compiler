@@ -9,7 +9,6 @@ class Token {
         string tokenInstance;
         int lineNumber;
         int charNumber;
-        //double lineCharNumber;
 
         string tokenNames[41] = { 
             "ID",
@@ -72,7 +71,6 @@ class Token {
         int getTokenId();
         string getTokenInstance();
         string getTokenDescription();
-        string toString();
         
         int getLineNumber();
         int getCharNumber();

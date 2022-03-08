@@ -27,11 +27,11 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum, fstream
 
             // cover all edge cases: IDs, keywords, single operators that could be part of a double
             if (nextState == ID_TK || nextState == NUM_TK) {
-                if (isspace(nextChar)) {
-                    charNum++;
-                }
+                // if (isspace(nextChar)) {
+                //     charNum++;
+                // }
                 if (keywordIndex(s) != -1) {
-                    nextState = STR_TK + keywordIndex(s);
+                    nextState = STR_TK + keywordIndex(s); // find the keyword ID (starting from STR_TK, the first keyword)
                 }
             } else if (nextState != ASGN_TK && nextState != COLN_TK) {  //these are double operators that have characters that could be part of single operators too
                 s += nextChar; //keep next character and move on to the next one
@@ -95,7 +95,7 @@ int keywordIndex(string word) {
             return i;
         i++;
     }
-    return -1;
+    return -1; // if it did not find the keyword, it's just an ID
 }
 
 //if the current char and the one after it is #, its a comment 

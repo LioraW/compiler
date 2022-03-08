@@ -41,23 +41,6 @@ int Token::getCharNumber(){
     return charNumber; 
 }
 
-//to string
-string Token::toString(){
-    string str = "";
-    
-    str += this->getTokenDescription();
-    
-    //if it is an ID, number, or an error, print the instance
-    if (this->getTokenId() == ID_TK || this->getTokenId() == NUM_TK || this->isError()){
-        str += "(" + this->getTokenInstance()  + ") ";
-    }
-    string extra = " at line " + lineNumber; 
-    str += extra;
-    str += ", char number " + charNumber;
-
-    return str;
-}
-
 bool Token::isFinal() {
     return tokenId > 1000;
 }
