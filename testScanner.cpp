@@ -26,7 +26,7 @@ void testScanner(string fileName) {
             charNum = 0;
             while (charNum < line.length()) {
 
-                Token token = scanner(line, charNum, openComment, numberLines);
+                Token token = scanner(line, charNum, openComment, numberLines, file);
                 
                 if (token.isError() && token.getTokenId() != WS_E) {
                     cout << "SCANNER ERROR: " << token.getTokenDescription() << ": line " << token.getLineNumber() << endl;
@@ -39,11 +39,6 @@ void testScanner(string fileName) {
             }
             cout << endl;
 
-            if (file.eof()){
-                Token endToken = Token(EOF_TK, "EOF", numberLines, 0);
-                cout << endToken.getTokenDescription() << "(" << endToken.getTokenInstance() << ") " << " line " << endToken.getLineNumber() << endl;
-                break;
-            }
         }
     
     } else {

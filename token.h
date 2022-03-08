@@ -71,10 +71,12 @@ class Token {
         
         int getTokenId();
         string getTokenInstance();
+        string getTokenDescription();
+        string toString();
+        
         int getLineNumber();
         int getCharNumber();
-
-        string getTokenDescription();
+        
         bool isFinal();
         bool isError();
         
