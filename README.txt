@@ -8,7 +8,7 @@ COMPILATION AND EXECUTION:
 For easy compilation use "Make".
 Execution: 
 ./scanner (it will take input from stdin until you type "EOF") OR
-./scanner testFile.sp2022 (.sp2022 is a required extension type)
+./scanner testFile.sp2022 (.sp2022 is a required extension type) OR
 ./scanner < testFile.sp2022
 
 
