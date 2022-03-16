@@ -27,9 +27,6 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum, fstream
 
             // cover all edge cases: IDs, keywords, single operators that could be part of a double
             if (nextState == ID_TK || nextState == NUM_TK) {
-                // if (isspace(nextChar)) {
-                //     charNum++;
-                // }
                 if (keywordIndex(s) != -1) {
                     nextState = STR_TK + keywordIndex(s); // find the keyword ID (starting from STR_TK, the first keyword)
                 }
