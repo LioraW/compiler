@@ -1,8 +1,9 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <vector>
 
-#include "testScanner.h"
+#include "parser.h"
 
 bool fileNameContainsDot(string FileName);
 string validateFileName(string fileName);
@@ -31,7 +32,12 @@ int main(int argc, char **argv) {
     }
     
 if (fileName != "") {
-       testScanner(fileName + ".sp2022");
+    
+    vector<Token> tokens = scannerUtility(fileName + ".sp2022");
+
+    for(Token t : tokens){
+        cout << t.getTokenDescription() << endl;
+    }
 }
 
     return 0;
