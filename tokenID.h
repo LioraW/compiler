@@ -62,6 +62,7 @@ enum tokenID {
     MN_TK,
     PTL_TK,
     IF_TK,
+    THEN_TK,
     PK_TK,
     DEC_TK,
     ASGN_KW_TK,

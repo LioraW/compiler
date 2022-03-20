@@ -52,9 +52,10 @@ Token scanner(string line, int& charNum, bool& openComment, int lineNum, fstream
         nextState = table[currentState][FSAColumn('\n')];
         token.resetAttributes(nextState, s, lineNum, startingChar);
     }
+    
     //return an EOF token if its the end of the file
-    if (file.eof()){
-        Token endToken = Token(EOF_TK, "EOF", lineNum, 0);
+    if (charNum >= line.length() && file.eof()){
+        Token endToken = Token(EOF_TK, "EOF", lineNum, charNum);
         return endToken;
     }
 

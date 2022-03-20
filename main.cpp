@@ -32,12 +32,13 @@ int main(int argc, char **argv) {
     }
     
 if (fileName != "") {
-    
-    vector<Token> tokens = scannerUtility(fileName + ".sp2022");
+    // vector<Token> tokens = scannerUtility(fileName + ".sp2022");
 
-    for(Token t : tokens){
-        cout << t.getTokenDescription() << endl;
-    }
+    // for(Token t : tokens){
+    //     cout << "token:" << t.getTokenDescription() << endl;
+    // }
+
+    parser(fileName + ".sp2022");
 }
 
     return 0;

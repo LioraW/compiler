@@ -1,3 +1,6 @@
-yell assign hi proc
-hah ## comment ##!=dp if
-more things 543 = * if() 
+## p2g1, smallest program and a good idea to make variants of this with each statement ##
+declare x := whole;
+main
+{
+    listen x ;
+}
