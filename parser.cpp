@@ -38,22 +38,22 @@ void program(vector<Token>::iterator& i){
     vars(i);
     if (i->getTokenId() == MN_TK){
         i++;
-        cout << "discovered main" << endl;
+        cout << "Main Keyword" << endl;
         block(i);
     } else {
-        cout << "parser error" << endl;
+        printError(MN_TK, i->getTokenInstance());
     }
 }
 void block(vector<Token>::iterator& i){
     if (i->getTokenId() == LCBRC_TK){
         i++;
-        cout << "Received left curly brace, beginning of block" << endl;
+        cout << "Left curly brace, beginning of block" << endl;
         vars(i);
         stats(i);
 
         if(i->getTokenId() == RCBRC_TK){
             i++;
-            cout << "end of block, receieved right curly brace" << endl;
+            cout << "Right curly brace, end of block" << endl;
             if (i->getTokenId() == EOF_TK){ //hacky 
                 return;
             }
