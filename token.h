@@ -77,6 +77,8 @@ class Token {
         
         bool isFinal();
         bool isError();
+
+        static string getTokenName(int tokenId);
         
 };
 

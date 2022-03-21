@@ -20,7 +20,7 @@ void parser(string fileName){
 
     vector<Token>::iterator i = tokens.begin();
 
-    program(tokens, i);
+    program(i);
 
     // for (vector<Token>::iterator i = tokens.begin(); i != tokens.end(); ++i) {
 
@@ -30,37 +30,58 @@ void parser(string fileName){
     // }
     
 }
+void printError(int expecting, string actual){
+    cout << "Expecting " << expecting << "; Instead found " << actual << endl;
+}
 
-void program(vector<Token> tokens, vector<Token>::iterator& i){
-    vars(tokens, i);
+void program(vector<Token>::iterator& i){
+    vars(i);
     if (i->getTokenId() == MN_TK){
-        block();
+        i++;
+        cout << "discovered main" << endl;
+        block(i);
     } else {
         cout << "parser error" << endl;
     }
 }
-void block(){
-    cout << "It's a block!" << endl;
+void block(vector<Token>::iterator& i){
+    if (i->getTokenId() == LCBRC_TK){
+        i++;
+        cout << "Received left curly brace, beginning of block" << endl;
+        vars(i);
+        stats(i);
+
+        if(i->getTokenId() == RCBRC_TK){
+            i++;
+            cout << "end of block, receieved right curly brace" << endl;
+            if (i->getTokenId() == EOF_TK){ //hacky 
+                return;
+            }
+        } else {
+            printError(RCBRC_TK, i->getTokenInstance());
+        }
+    }
+    return; //just return so we know 
+    
 }
 
-void vars (vector<Token> tokens, vector<Token>::iterator& i){
+void vars (vector<Token>::iterator& i){
+    string idInstance = ""; // to hold possible ID instance in this var set
+
     //  empty | declare Identifier :=  whole  ;  <vars>
     if (i->getTokenId() == DEC_TK){
-        cout << i->getTokenDescription() << endl;
         i++;
         if (i->getTokenId() == ID_TK){
-            cout << i->getTokenDescription() << ": " << i->getTokenInstance() <<  endl;
+            idInstance = i->getTokenInstance();
             i++;
             if (i->getTokenId() == COLNEQ_TK){
-                cout << i->getTokenDescription() << endl;
                 i++;
                 if(i->getTokenId() == WHL_TK){
-                    cout << i->getTokenDescription() << endl;
                     i++;
                     if(i->getTokenId() == SCOLN_TK){
-                        cout << i->getTokenDescription() << endl;
                         i++;
-                        vars(tokens, i);
+                        cout << "Vars: declare ID (" << idInstance << ") := whole ;" << endl;
+                        vars(i);
                     }
                 } else { //error conditons
                     return;
@@ -76,6 +97,51 @@ void vars (vector<Token> tokens, vector<Token>::iterator& i){
     else {
         return;
     }
+}
+void stats(vector<Token>::iterator& i){
+    stat(i);
+    //mstat(i);
+}
+void mstat(vector<Token>::iterator& i){
+    stat(i);
+
+}
+
+void stat(vector<Token>::iterator& i){
+    in(i);
+    ifStat(i);
+
+    if (i->getTokenId() == SCOLN_TK){
+        i++;
+    } else {
+        printError(SCOLN_TK, i->getTokenInstance());
+    }
+}
+
+void in(vector<Token>::iterator& i){
+    string idInstance = "";
+
+    if (i->getTokenId() == LST_TK){
+        i++;
+        if (i->getTokenId() == ID_TK){
+            i++;
+            idInstance = i->getTokenInstance();
+            cout << "Listen Statement: listen " << idInstance << endl;
+        } else {
+            printError(ID_TK, i->getTokenInstance());
+        }
+    }
+}
+
+void ifStat(vector<Token>::iterator& i){
+    if (i->getTokenId() == IF_TK){
+        i++;
+        if (i->getTokenId() == SCOLN_TK){
+            cout << "Stat: if " << endl;
+        } else {
+            printError(SCOLN_TK, i->getTokenInstance());
+        }
+    } //else it's just not an if, don't increment the iterator yet
 }
 
 // Takes in a filename and feeds the lines of that file to the scanner, which returns a token and testScanner prints out the token.

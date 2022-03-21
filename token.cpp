@@ -48,3 +48,7 @@ bool Token::isFinal() {
 bool Token::isError() {
     return tokenId < 0;
 }
+
+// static string getTokenName(int tokenId){
+//     return this.tokenNames[tokenId];
+// }
