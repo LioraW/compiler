@@ -31,6 +31,8 @@ void parser(string fileName){
     
 }
 void printError(int expecting, string actual){
+    //TODO it needs to expect any number of things, so it should use a spread operator or an array?
+    // solution: change int expecting to a string and voila
     cout << "Expecting " << expecting << "; Instead found " << actual << endl;
 }
 
@@ -98,13 +100,104 @@ void vars (vector<Token>::iterator& i){
         return;
     }
 }
+
+void expr(vector<Token>::iterator& i){
+    // <expr> -> <N> - <expr>  | <N>
+    cout << "Expression:";
+    N(i);
+    if (i->getTokenId() == MINUS_TK){
+        i++;
+        cout << "subtraction expression" << endl;
+        expr(i);
+
+    } else {
+        return; //does not need another expression
+    }
+
+}
+void N(vector<Token>::iterator& i) {
+    // split up to avoid left recursion
+    cout << " N ";
+    A(i);
+    X(i);
+}
+
+void X(vector<Token>::iterator& i) {
+    cout << " X ";
+    //<X> ->  / <A><X> | +<A><X> |  empty
+
+    if (i->getTokenId() == DIV_TK){
+        i++;
+        cout << "dividng Expression" << endl;
+        A(i);
+        X(i); //right recursive
+    } else if (i->getTokenId() == PLUS_TK) {
+        i++;
+        cout << "Adding expression" << endl;
+        A(i);
+        X(i);
+    } else {
+        return; //empty
+    }
+}
+void A(vector<Token>::iterator& i) {
+    cout << " A ";
+    //A> -> <M> * <A> | <M>
+    M(i);
+    if (i->getTokenId() == MULT_TK){
+        i++;
+        cout << "Multiplication expression" << endl;
+        A(i);
+
+    } else {
+        return; //does not need another peice
+    }
+}
+void M(vector<Token>::iterator& i) {
+    //<M> -> % <M> |  <R>
+     cout << " M ";
+    if (i->getTokenId() == MOD_TK){
+        i++;
+        cout << "Modulus expression" << endl;
+        M(i);
+
+    } else {
+        R(i); //does not need another peice
+    }
+}
+
+void R(vector<Token>::iterator& i) {
+   //<R> -> ( <expr> ) | Identifier | Integer
+    cout << " R ";
+   if (i->getTokenId() == LPRN_TK) {
+       i++;
+       expr(i);
+       if (i-> getTokenId() == RPRN_TK){
+           i++;
+           cout << "R expression" << endl;
+       } else {
+           printError(RPRN_TK, i->getTokenInstance());
+       }
+   } else if (i->getTokenId() == ID_TK) {
+       i++;
+       cout << "R is ID" << endl; //termial
+   } else if (i->getTokenId() == NUM_TK) {
+       i++;
+       cout << "R is number" << endl;
+   } else {
+       cout << "R is wacky: instead we found"  << i->getTokenId() << endl;
+       printError(LPRN_TK, i->getTokenInstance()); //TODO it needs to know to expect one of three things
+   }
+}
+
 void stats(vector<Token>::iterator& i){
     stat(i);
     //mstat(i);
 }
 void mstat(vector<Token>::iterator& i){
+    //how to allow empty?
     stat(i);
-
+    mstat(i);
 }
 
 void stat(vector<Token>::iterator& i){
@@ -124,8 +217,8 @@ void in(vector<Token>::iterator& i){
     if (i->getTokenId() == LST_TK){
         i++;
         if (i->getTokenId() == ID_TK){
-            i++;
             idInstance = i->getTokenInstance();
+            i++;
             cout << "Listen Statement: listen " << idInstance << endl;
         } else {
             printError(ID_TK, i->getTokenInstance());
@@ -133,16 +226,78 @@ void in(vector<Token>::iterator& i){
     }
 }
 
+void out(vector<Token>::iterator& i){
+    if (i->getTokenId() == YELL_TK){
+        i++;
+        cout << "YEll" << endl;
+        //need to check for an expression
+    }
+}
+
 void ifStat(vector<Token>::iterator& i){
     if (i->getTokenId() == IF_TK){
         i++;
-        if (i->getTokenId() == SCOLN_TK){
-            cout << "Stat: if " << endl;
+        cout << "if ..." << endl;
+        if (i->getTokenId() == LBRC_TK){
+            i++;
+            expr(i);
+            RO(i);
+            expr(i);
+            if (i->getTokenId() == RBRC_TK){
+                i++;
+                if (i->getTokenId() == THEN_TK){
+                    i++;
+                    stat(i);
+                } else {
+                    printError(THEN_TK, i->getTokenInstance());
+                }
+            } else {
+                printError(RBRC_TK, i->getTokenInstance());
+            }
         } else {
-            printError(SCOLN_TK, i->getTokenInstance());
+            printError(LBRC_TK, i->getTokenInstance());
         }
+
+        // if (i->getTokenId() == SCOLN_TK){
+        //     cout << "Stat: if " << endl;
+        // } else {
+        //     printError(SCOLN_TK, i->getTokenInstance());
+        // }
     } //else it's just not an if, don't increment the iterator yet
 }
+
+void RO(vector<Token>::iterator& i){
+    if (i->getTokenId() == LTE_TK) {
+        i++;
+        cout << "Less than or Equal to" << endl;
+    } else if (i->getTokenId() == GRTE_TK) {
+        i++;
+        cout << "Greater than or equal to" << endl;
+    } else if (i->getTokenId() == EQ_TK) {
+        i++;
+        cout << "Equality" << endl;
+
+    } else if (i->getTokenId() == DOT_TK){
+        i++;
+        if (i->getTokenId() == DOT_TK) {
+            i++;
+            if (i->getTokenId() == DOT_TK){
+                i++;
+                cout << "Dot dot dot token" << endl;
+            } else {
+                printError(DOT_TK, i->getTokenInstance());
+            }
+        } else {
+            printError(DOT_TK, i->getTokenInstance());
+        }
+    } else if (i->getTokenId() == NTEQ_TK){
+        i++;
+        cout << "not equal" << endl;
+    } else {
+        printError(LTE_ERR, i->getTokenInstance()); // should just be relational operator
+    }
+}
+
 
 // Takes in a filename and feeds the lines of that file to the scanner, which returns a token and testScanner prints out the token.
 vector<Token> scannerUtility(string fileName) {
@@ -153,7 +308,6 @@ vector<Token> scannerUtility(string fileName) {
     int numberLines = 0;
     int charNum = 0;
     bool openComment = false; 
-
 
     // Open the file
     file.open(fileName);
@@ -181,7 +335,7 @@ vector<Token> scannerUtility(string fileName) {
                 
                 } else if (token.isError() && token.getTokenId() != WS_E) {
                     cout << "SCANNER ERROR: ";
-                    tokens.push_back(token);
+                    cout << token.getErrorName() << endl;
                     file.close();
                     return tokens;
                 } 

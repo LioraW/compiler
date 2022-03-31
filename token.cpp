@@ -1,5 +1,6 @@
 #include <string>
 #include <math.h>
+#include <stdlib.h>
 #include "token.h"
 #include "tokenID.h"
 using namespace std;
@@ -49,6 +50,11 @@ bool Token::isError() {
     return tokenId < 0;
 }
 
-// static string getTokenName(int tokenId){
-//     return this.tokenNames[tokenId];
-// }
+string Token::getErrorName(){
+    if (this->getTokenId() < 0){
+        return this->errorNames[abs(tokenId) - 1];
+    } else {
+        return "Not an error";
+    }
+     
+ }

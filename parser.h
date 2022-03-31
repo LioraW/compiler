@@ -11,11 +11,19 @@ void printError(int expecting, string actual);
 void program(vector<Token>::iterator& i);
 void block(vector<Token>::iterator& i);
 void vars(vector<Token>::iterator& i);
+void expr(vector<Token>::iterator& i);
+void N(vector<Token>::iterator& i);
+void X(vector<Token>::iterator& i);
+void A(vector<Token>::iterator& i);
+void M(vector<Token>::iterator& i);
+void R(vector<Token>::iterator& i);
 void stats(vector<Token>::iterator& i);
 void mstat(vector<Token>::iterator& i);
 void stat(vector<Token>::iterator& i);
 void in(vector<Token>::iterator& i);
+void out(vector<Token>::iterator& i);
 void ifStat(vector<Token>::iterator& i);
+void RO(vector<Token>::iterator& i);
 
 
 #endif
