@@ -23,6 +23,12 @@ void stat(vector<Token>::iterator& i);
 void in(vector<Token>::iterator& i);
 void out(vector<Token>::iterator& i);
 void ifStat(vector<Token>::iterator& i);
+void loop(vector<Token>::iterator& i);
+void loop1(vector<Token>::iterator& i);
+void loop2(vector<Token>::iterator& i);
+void assign(vector<Token>::iterator& i);
+void label(vector<Token>::iterator& i);
+void gotoStat(vector<Token>::iterator& i);
 void RO(vector<Token>::iterator& i);
 
 

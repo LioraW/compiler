@@ -27,7 +27,7 @@ void parser(string fileName){
         program(i); 
 
     } else {
-        cout << "SCANNER ERROR: " << tokens.back().getErrorName() << endl;
+        cout << "SCANNER ERROR: " << tokens.back().getTokenDescription() << endl;
     }
     
 }
@@ -206,8 +206,10 @@ void stat(vector<Token>::iterator& i){
     out(i);
     block(i);
     ifStat(i);
-    
-
+    loop(i);
+    assign(i);
+    label(i);
+    gotoStat(i);
 }
 
 void in(vector<Token>::iterator& i){
@@ -263,7 +265,6 @@ void ifStat(vector<Token>::iterator& i){
                 if (i->getTokenId() == THEN_TK){ //then 
                     i++;
                     stat(i);
-
                     if (i->getTokenId() == SCOLN_TK){ //semicolon
                         i++;
                     } else {
@@ -282,35 +283,156 @@ void ifStat(vector<Token>::iterator& i){
     } //else it's just not an if, don't increment the iterator yet
 }
 
-void RO(vector<Token>::iterator& i){
-    if (i->getTokenId() == LTE_TK) {
-        i++;
-        cout << "Less than or Equal to ";
-    } else if (i->getTokenId() == GRTE_TK) {
-        i++;
-        cout << "Greater than or equal to ";
-    } else if (i->getTokenId() == EQ_TK) {
-        i++;
-        cout << "Equality ";
+void loop(vector<Token>::iterator& i){
+    //BNF is not ll1 => extra lookahead needed
+    if (i->getTokenId() == RPT_TK){
+        i++; //consume repeat token
+        if (i->getTokenId() == LBRC_TK){ //if there is a right bracket, it's loop1
+            i++; //consume the left bracket
+            loop1(i);
+        } else {
+            loop2(i); //we did not consume the next token
+        }
 
-    } else if (i->getTokenId() == DOT_TK){
-        i++;
-        if (i->getTokenId() == DOT_TK) {
+        //check for semicolon
+        if (i->getTokenId() == SCOLN_TK){
             i++;
-            if (i->getTokenId() == DOT_TK){
+        } else {
+            printError(SCOLN_TK, i->getTokenInstance());
+        }  
+    }
+}
+void loop1(vector<Token>::iterator& i){
+    //<loop1> -> repeat  [ <expr> <RO> <expr> ]  <stat>
+    expr(i);
+    RO(i);
+    expr(i);
+    if (i->getTokenId() == RBRC_TK){
+        i++;
+        stat(i);
+    }
+
+}
+
+void loop2(vector<Token>::iterator& i){
+    //<loop2> -> repeat <stat> until [ <expr> <RO> <expr> ] 
+    stat(i);
+    if (i->getTokenId() == UNT_TK){
+        i++;
+        if (i->getTokenId() == LBRC_TK){
+            i++;
+            expr(i);
+            RO(i);
+            expr(i);
+            if (i->getTokenId() == RBRC_TK) {
                 i++;
-                cout << "Dot dot dot token ";
+            } else {
+                printError(RBRC_TK, i->getTokenInstance());
+            }
+        } else {
+            printError(LBRC_TK, i->getTokenInstance());
+        }
+    } else {
+        printError(UNT_TK, i->getTokenInstance());
+    }
+}
+
+void assign(vector<Token>::iterator& i){
+    //<assign> -> assign Identifier  = <expr>  
+    string idInstance = "";
+
+    if (i->getTokenId() == ASGN_KW_TK) {
+        i++;
+        if (i->getTokenId() == ID_TK){
+            idInstance = i->getTokenInstance();
+            i++;
+            if (i->getTokenId() == ASGN_TK) {
+                i++;
+                expr(i);
+
+                //check for semicolon
+                if (i->getTokenId() == SCOLN_TK){
+                    i++;
+                } else {
+                    printError(SCOLN_TK, i->getTokenInstance());
+                } 
+            }        
+        } else {
+            printError(ID_TK, i->getTokenInstance());
+        }
+    }
+}
+
+void label(vector<Token>::iterator& i){
+    // <label> -> label Identifier
+    string idInstance = "";
+    cout << i->getTokenDescription();
+    if (i->getTokenId() == LBL_TK) {
+        i++;
+        if (i->getTokenId() == ID_TK){
+            idInstance = i->getTokenInstance();
+            i++;
+            //check for semicolon
+            if (i->getTokenId() == SCOLN_TK){
+                i++;
+            } else {
+                printError(SCOLN_TK, i->getTokenInstance());
+            }       
+        } else {
+            printError(ID_TK, i->getTokenInstance());
+        }
+    }
+}
+
+void gotoStat(vector<Token>::iterator& i){
+    string idInstance = "";
+    if (i->getTokenId() == PTL_TK) {
+        i++;
+        if (i->getTokenId() == ID_TK){
+            idInstance = i->getTokenInstance();
+            i++;
+            //check for semicolon
+            if (i->getTokenId() == SCOLN_TK){
+                i++;
+            } else {
+                printError(SCOLN_TK, i->getTokenInstance());
+            }       
+        } else {
+            printError(ID_TK, i->getTokenInstance());
+        }
+    }
+}
+
+void RO(vector<Token>::iterator& i){
+    int op = 0;
+    switch(i->getTokenId())
+    {
+        case LTE_TK:
+        case GRTE_TK:
+        case EQ_TK:
+        case NTEQ_TK:
+            op = i->getTokenId();
+            cout << "RO: " << i->getTokenDescription() << endl;
+            i++;
+            break;
+        case DOT_TK:
+            i++;
+            if (i->getTokenId() == DOT_TK) {
+                i++;
+                if (i->getTokenId() == DOT_TK){
+                    op = DOT_TK;
+                    cout << "RO: " << i->getTokenDescription() << endl;
+                    i++;
+                } else {
+                    printError(DOT_TK, i->getTokenInstance());
+                }
             } else {
                 printError(DOT_TK, i->getTokenInstance());
             }
-        } else {
-            printError(DOT_TK, i->getTokenInstance());
-        }
-    } else if (i->getTokenId() == NTEQ_TK){
-        i++;
-        cout << "not equal ";
-    } else {
-        printError(LTE_ERR, i->getTokenInstance()); // should just be relational operator
+            break;
+        default:
+            printError(LTE_ERR, i->getTokenInstance()); // should just be relational operator
+            break;
     }
 }
 

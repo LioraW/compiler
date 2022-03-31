@@ -49,12 +49,3 @@ bool Token::isFinal() {
 bool Token::isError() {
     return tokenId < 0;
 }
-
-string Token::getErrorName(){
-    if (this->getTokenId() < 0){
-        return this->errorNames[abs(tokenId) - 1];
-    } else {
-        return "Not an error";
-    }
-     
- }

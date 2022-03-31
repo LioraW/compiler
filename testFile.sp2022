@@ -2,8 +2,6 @@
 declare x := whole;
 main
 {
-    {
-        if [ n >= m] then yell x * n;;
-    }
+    repeat [ m = n] listen c;;
     
 }
