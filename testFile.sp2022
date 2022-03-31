@@ -1,6 +1,9 @@
-## p2g1, smallest program and a good idea to make variants of this with each statement ##
+
 declare x := whole;
 main
 {
-    if [ M - N ] then listen x;
+    {
+        if [ n >= m] then yell x * n;;
+    }
+    
 }

@@ -187,7 +187,6 @@ void R(vector<Token>::iterator& i) {
        i++;
        cout << "R is number" << endl;
    } else {
-       cout << "R is wacky: instead we found"  << i->getTokenId() << endl;
        printError(LPRN_TK, i->getTokenInstance()); //TODO it needs to know to expect one of three things
    }
 }
@@ -204,13 +203,11 @@ void mstat(vector<Token>::iterator& i){
 
 void stat(vector<Token>::iterator& i){
     in(i);
+    out(i);
+    block(i);
     ifStat(i);
+    
 
-    if (i->getTokenId() == SCOLN_TK){
-        i++;
-    } else {
-        printError(SCOLN_TK, i->getTokenInstance());
-    }
 }
 
 void in(vector<Token>::iterator& i){
@@ -222,6 +219,14 @@ void in(vector<Token>::iterator& i){
             idInstance = i->getTokenInstance();
             i++;
             cout << "Listen Statement: listen " << idInstance << endl;
+            
+            //check for semicolon
+            if (i->getTokenId() == SCOLN_TK){
+                i++;
+            } else {
+                printError(SCOLN_TK, i->getTokenInstance());
+            }
+
         } else {
             printError(ID_TK, i->getTokenInstance());
         }
@@ -231,25 +236,40 @@ void in(vector<Token>::iterator& i){
 void out(vector<Token>::iterator& i){
     if (i->getTokenId() == YELL_TK){
         i++;
-        cout << "YEll" << endl;
-        //need to check for an expression
+        cout << "YEll ";
+        expr(i);
+
+        //check for semicolon
+        if (i->getTokenId() == SCOLN_TK){
+            i++;
+        } else {
+            printError(SCOLN_TK, i->getTokenInstance());
+        }
     }
 }
 
 void ifStat(vector<Token>::iterator& i){
-    if (i->getTokenId() == IF_TK){
+    if (i->getTokenId() == IF_TK){ //if token
         i++;
-        cout << "if ..." << endl;
-        if (i->getTokenId() == LBRC_TK){
+        cout << "if statement ";
+        if (i->getTokenId() == LBRC_TK){ //left bracket
             i++;
             expr(i);
             RO(i);
             expr(i);
-            if (i->getTokenId() == RBRC_TK){
+
+            if (i->getTokenId() == RBRC_TK){ //right bracket
                 i++;
-                if (i->getTokenId() == THEN_TK){
+                if (i->getTokenId() == THEN_TK){ //then 
                     i++;
                     stat(i);
+
+                    if (i->getTokenId() == SCOLN_TK){ //semicolon
+                        i++;
+                    } else {
+                        printError(SCOLN_TK, i->getTokenInstance());
+                    }
+
                 } else {
                     printError(THEN_TK, i->getTokenInstance());
                 }
@@ -259,25 +279,19 @@ void ifStat(vector<Token>::iterator& i){
         } else {
             printError(LBRC_TK, i->getTokenInstance());
         }
-
-        // if (i->getTokenId() == SCOLN_TK){
-        //     cout << "Stat: if " << endl;
-        // } else {
-        //     printError(SCOLN_TK, i->getTokenInstance());
-        // }
     } //else it's just not an if, don't increment the iterator yet
 }
 
 void RO(vector<Token>::iterator& i){
     if (i->getTokenId() == LTE_TK) {
         i++;
-        cout << "Less than or Equal to" << endl;
+        cout << "Less than or Equal to ";
     } else if (i->getTokenId() == GRTE_TK) {
         i++;
-        cout << "Greater than or equal to" << endl;
+        cout << "Greater than or equal to ";
     } else if (i->getTokenId() == EQ_TK) {
         i++;
-        cout << "Equality" << endl;
+        cout << "Equality ";
 
     } else if (i->getTokenId() == DOT_TK){
         i++;
@@ -285,7 +299,7 @@ void RO(vector<Token>::iterator& i){
             i++;
             if (i->getTokenId() == DOT_TK){
                 i++;
-                cout << "Dot dot dot token" << endl;
+                cout << "Dot dot dot token ";
             } else {
                 printError(DOT_TK, i->getTokenInstance());
             }
@@ -294,7 +308,7 @@ void RO(vector<Token>::iterator& i){
         }
     } else if (i->getTokenId() == NTEQ_TK){
         i++;
-        cout << "not equal" << endl;
+        cout << "not equal ";
     } else {
         printError(LTE_ERR, i->getTokenInstance()); // should just be relational operator
     }
