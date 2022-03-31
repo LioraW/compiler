@@ -12,24 +12,26 @@
 using namespace std;
 
 void parser(string fileName){
+    
+    //get tokens
     vector<Token> tokens = scannerUtility(fileName);
     
-    //bandaid for right now
-    Token endToken = Token(EOF_TK, "EOF", 0, 0);
-    tokens.push_back(endToken);
+    if (!tokens.back().isError()){
 
-    vector<Token>::iterator i = tokens.begin();
+        //bandaid for right now
+        Token endToken = Token(EOF_TK, "EOF", 0, 0);
+        tokens.push_back(endToken);
 
-    program(i);
+        //start parsing
+        vector<Token>::iterator i = tokens.begin();
+        program(i); 
 
-    // for (vector<Token>::iterator i = tokens.begin(); i != tokens.end(); ++i) {
-
-    //     if (i->getTokenId() == EOF_TK) {
-    //         break;
-    //     }
-    // }
+    } else {
+        cout << "SCANNER ERROR: " << tokens.back().getErrorName() << endl;
+    }
     
 }
+
 void printError(int expecting, string actual){
     //TODO it needs to expect any number of things, so it should use a spread operator or an array?
     // solution: change int expecting to a string and voila
@@ -334,8 +336,7 @@ vector<Token> scannerUtility(string fileName) {
                     }
                 
                 } else if (token.isError() && token.getTokenId() != WS_E) {
-                    cout << "SCANNER ERROR: ";
-                    cout << token.getErrorName() << endl;
+                    tokens.push_back(token);
                     file.close();
                     return tokens;
                 } 
