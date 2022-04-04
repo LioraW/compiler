@@ -193,12 +193,20 @@ void R(vector<Token>::iterator& i) {
 
 void stats(vector<Token>::iterator& i){
     stat(i);
-    //mstat(i);
+    mstat(i);
 }
 void mstat(vector<Token>::iterator& i){
-    //how to allow empty?
+    //to allow empty
+    vector<Token>::iterator previous = i;
+    
     stat(i);
-    mstat(i);
+
+    //if there was a statement, check for one more. otherwise it's empty and return.
+    if (previous != i){
+        mstat(i);
+    } else {
+        return;
+    }
 }
 
 void stat(vector<Token>::iterator& i){

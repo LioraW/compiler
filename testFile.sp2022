@@ -2,6 +2,7 @@
 declare x := whole;
 main
 {
-    repeat [ m = n] listen c;;
+    repeat [ m == n] listen c;;
+    listen x;
     
 }
