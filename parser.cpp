@@ -8,6 +8,8 @@
 #include "tokenID.h"
 #include "token.h"
 #include "parser.h"
+#include "tree.h"
+#include "node.h"
 
 using namespace std;
 
@@ -15,7 +17,9 @@ void parser(string fileName){
     
     //get tokens
     vector<Token> tokens = scannerUtility(fileName);
-    
+
+    Node * root = nullptr;
+
     if (!tokens.back().isError()){
 
         //bandaid for right now
@@ -24,59 +28,67 @@ void parser(string fileName){
 
         //start parsing
         vector<Token>::iterator i = tokens.begin();
-        program(i); 
+        
+        //create parse tree
+        root = program(i); 
+
+        printPreorder(root, 0);
 
     } else {
         cout << "SCANNER ERROR: " << tokens.back().getTokenDescription() << endl;
     }
-    
 }
 
-void printError(int expecting, string actual){
-    //TODO it needs to expect any number of things, so it should use a spread operator or an array?
-    // solution: change int expecting to a string and voila
+void printError(string expecting, string actual){
     cout << "Expecting " << expecting << "; Instead found " << actual << endl;
 }
 
-void program(vector<Token>::iterator& i){
-    vars(i);
+Node * program(vector<Token>::iterator& i){
+    Node * p = getNode("program");
+    
+    p->left = vars(i);
+
     if (i->getTokenId() == MN_TK){
         i++;
-        cout << "Main Keyword" << endl;
-        block(i);
+        p->right = block(i);
     } else {
-        printError(MN_TK, i->getTokenInstance());
+        printError("main keyword", i->getTokenInstance());
+        return nullptr;
     }
-}
-void block(vector<Token>::iterator& i){
-    if (i->getTokenId() == LCBRC_TK){
-        i++;
-        cout << "Left curly brace, beginning of block" << endl;
-        vars(i);
-        stats(i);
+    return p;
 
-        if(i->getTokenId() == RCBRC_TK){
+}
+Node * block(vector<Token>::iterator& i){
+    if (i->getTokenId() == LCBRC_TK){
+        Node * p = getNode("block");
+        i++;
+        p->middle1 = vars(i);
+        p->middle2 = stats(i);
+
+        if(i->getTokenId() == RCBRC_TK) {
             i++;
-            cout << "Right curly brace, end of block" << endl;
-            if (i->getTokenId() == EOF_TK){ //hacky 
-                return;
+            return p;
+            if (i->getTokenId() == EOF_TK){ //TODO
+                return p;
             }
         } else {
-            printError(RCBRC_TK, i->getTokenInstance());
+            
+            printError("Right bracket after block", i->getTokenInstance());
+            return nullptr;
         }
     }
-    return; //just return so we know 
+    return nullptr; //just return so we know 
     
 }
 
-void vars (vector<Token>::iterator& i){
-    string idInstance = ""; // to hold possible ID instance in this var set
+Node * vars (vector<Token>::iterator& i){
 
     //  empty | declare Identifier :=  whole  ;  <vars>
     if (i->getTokenId() == DEC_TK){
+        Node * p = getNode("vars");
         i++;
         if (i->getTokenId() == ID_TK){
-            idInstance = i->getTokenInstance();
+            p->token = i->getTokenInstance();
             i++;
             if (i->getTokenId() == COLNEQ_TK){
                 i++;
@@ -84,343 +96,427 @@ void vars (vector<Token>::iterator& i){
                     i++;
                     if(i->getTokenId() == SCOLN_TK){
                         i++;
-                        cout << "Vars: declare ID (" << idInstance << ") := whole ;" << endl;
-                        vars(i);
+                        p->right = vars(i);
+                        return p;
+                    } else {
+                        printError("semicolon", i->getTokenInstance());
+                        return nullptr;
                     }
-                } else { //error conditons
-                    return;
+                } else { //error conditions
+                    printError("Whole keyword", i->getTokenInstance());
+                    return nullptr;
                 }
 
             } else {
-                return;
+                printError("Colon Equals", i->getTokenInstance());
+                return nullptr;
             }
         } else {
-            return;
+            printError("Identifier", i->getTokenInstance());
+            return nullptr;
         }
-    }
-    else {
-        return;
+    } else {
+        return nullptr; //for empty
     }
 }
 
-void expr(vector<Token>::iterator& i){
+Node * expr(vector<Token>::iterator& i){
     // <expr> -> <N> - <expr>  | <N>
-    cout << "Expression:";
-    N(i);
+    Node * p = getNode("expression");
+    p->left = N(i);
     if (i->getTokenId() == MINUS_TK){
         i++;
-        cout << "subtraction expression" << endl;
-        expr(i);
-
-    } else {
-        return; //does not need another expression
+        p->token = "-";
+        p->right = expr(i);
     }
+    return p;
 
 }
-void N(vector<Token>::iterator& i) {
-    // split up to avoid left recursion
-    cout << " N ";
-    A(i);
-    X(i);
+Node * N(vector<Token>::iterator& i) {
+    // split up to aNode * left recursion
+    Node * p = getNode("N");
+    p->left = A(i);
+    p->right = X(i);
+
+    return p;
 }
 
-void X(vector<Token>::iterator& i) {
-    cout << " X ";
+Node * X(vector<Token>::iterator& i) {
     //<X> ->  / <A><X> | +<A><X> |  empty
+    Node * p = getNode("P");
 
     if (i->getTokenId() == DIV_TK){
         i++;
-        cout << "dividng Expression" << endl;
-        A(i);
-        X(i); //right recursive
+        p->token = "/";
+        p->left = A(i);
+        p->right = X(i); //right recursive
     } else if (i->getTokenId() == PLUS_TK) {
         i++;
-        cout << "Adding expression" << endl;
-        A(i);
-        X(i);
+        p->token = "+";
+        p->left = A(i);
+        p->right = X(i);
     } else {
-        return; //empty
+        return nullptr; //empty
     }
+    return p;
 }
-void A(vector<Token>::iterator& i) {
-    cout << " A ";
+
+Node * A(vector<Token>::iterator& i) {
     //A> -> <M> * <A> | <M>
-    M(i);
+    Node * p = getNode("A");
+    p->left = M(i);
     if (i->getTokenId() == MULT_TK){
         i++;
-        cout << "Multiplication expression" << endl;
-        A(i);
+        p->token = "*";
+        p->right = A(i);
 
     } else {
-        return; //does not need another peice
+        return nullptr; //does not need another piece
     }
+    return p;
 }
-void M(vector<Token>::iterator& i) {
+
+Node * M(vector<Token>::iterator& i) {
     //<M> -> % <M> |  <R>
-     cout << " M ";
+    Node * p = getNode("M");
+
     if (i->getTokenId() == MOD_TK){
         i++;
-        cout << "Modulus expression" << endl;
-        M(i);
+        p->token = "%";
+        p->right = M(i);
 
     } else {
-        R(i); //does not need another peice
+        p->left = R(i);
     }
+    return p;
 }
 
-void R(vector<Token>::iterator& i) {
+Node * R(vector<Token>::iterator& i) {
    //<R> -> ( <expr> ) | Identifier | Integer
-    cout << " R ";
+    Node * p = getNode("R");
+
    if (i->getTokenId() == LPRN_TK) {
        i++;
-       expr(i);
+       p->middle1 = expr(i);
        if (i-> getTokenId() == RPRN_TK){
            i++;
-           cout << "R expression" << endl;
        } else {
-           printError(RPRN_TK, i->getTokenInstance());
+           printError("Right parentheses", i->getTokenInstance());
+           return nullptr;
        }
    } else if (i->getTokenId() == ID_TK) {
        i++;
-       cout << "R is ID" << endl; //termial
+       p->token = i->getTokenInstance();
    } else if (i->getTokenId() == NUM_TK) {
        i++;
-       cout << "R is number" << endl;
+       p->token = i->getTokenInstance();
    } else {
-       printError(LPRN_TK, i->getTokenInstance()); //TODO it needs to know to expect one of three things
+       printError("Expression in parantheses, identifier, or number", i->getTokenInstance());
+       return nullptr;
    }
+   return p;
 }
 
-void stats(vector<Token>::iterator& i){
-    stat(i);
-    mstat(i);
+Node * stats(vector<Token>::iterator& i){
+    //<stats> -> <stat>  <mStat>
+    Node * p = getNode("stats");
+    p->left = stat(i);
+    p->right = mstat(i);
+
+    return p;
 }
-void mstat(vector<Token>::iterator& i){
+
+Node * mstat(vector<Token>::iterator& i){
+    //<mStat>-> <stat>  <mStat> | empty
+    Node * p = getNode("mstat");
+
     //to allow empty
     vector<Token>::iterator previous = i;
     
-    stat(i);
+    p->left = stat(i);
 
     //if there was a statement, check for one more. otherwise it's empty and return.
     if (previous != i){
-        mstat(i);
+        p-> right = mstat(i);
+        return p;
     } else {
-        return;
+        return nullptr;
     }
 }
 
-void stat(vector<Token>::iterator& i){
-    in(i);
-    out(i);
-    block(i);
-    ifStat(i);
-    loop(i);
-    assign(i);
-    label(i);
-    gotoStat(i);
+Node * stat(vector<Token>::iterator& i){
+    Node * p = getNode("stat");
+
+    p->left = in(i);
+    if (p->left == nullptr)
+        p->left = out(i);
+    if (p->left == nullptr)
+        p->left = block(i);
+    if (p->left == nullptr)
+        p->left = ifStat(i);
+    if (p->left == nullptr)
+        p->left = loop(i);
+    if (p->left == nullptr)
+        p->left = assign(i);
+    if (p->left == nullptr)
+        p->left = label(i);
+    if (p->left == nullptr)
+        p->left = gotoStat(i);
+    if (p->left != nullptr)
+        return p;
+    else
+        return nullptr;
 }
 
-void in(vector<Token>::iterator& i){
-    string idInstance = "";
-
+Node * in(vector<Token>::iterator& i){
     if (i->getTokenId() == LST_TK){
+        Node * p = getNode("in");
         i++;
         if (i->getTokenId() == ID_TK){
-            idInstance = i->getTokenInstance();
+            p->token = i->getTokenInstance();
             i++;
-            cout << "Listen Statement: listen " << idInstance << endl;
-            
+     
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
+                return p;
             } else {
-                printError(SCOLN_TK, i->getTokenInstance());
+                printError("semicolon", i->getTokenInstance());
+                return nullptr;
             }
-
         } else {
-            printError(ID_TK, i->getTokenInstance());
+            printError("identifier", i->getTokenInstance());
+            return nullptr;
         }
     }
+    return nullptr;
 }
 
-void out(vector<Token>::iterator& i){
+Node * out(vector<Token>::iterator& i){
     if (i->getTokenId() == YELL_TK){
+        Node * p = getNode("out");
         i++;
-        cout << "YEll ";
-        expr(i);
+        p->right = expr(i);
 
         //check for semicolon
         if (i->getTokenId() == SCOLN_TK){
             i++;
+            return p;
         } else {
-            printError(SCOLN_TK, i->getTokenInstance());
+            printError("semicolon", i->getTokenInstance());
+            return nullptr;
         }
     }
+    return nullptr;
 }
 
-void ifStat(vector<Token>::iterator& i){
+Node * ifStat(vector<Token>::iterator& i){
+    
     if (i->getTokenId() == IF_TK){ //if token
+        Node * p = getNode("if");
         i++;
-        cout << "if statement ";
         if (i->getTokenId() == LBRC_TK){ //left bracket
             i++;
-            expr(i);
-            RO(i);
-            expr(i);
+            p->left = expr(i);
+            p->middle1 = RO(i);
+            p->middle2 = expr(i);
 
             if (i->getTokenId() == RBRC_TK){ //right bracket
                 i++;
                 if (i->getTokenId() == THEN_TK){ //then 
                     i++;
-                    stat(i);
+                    p->right = stat(i);
                     if (i->getTokenId() == SCOLN_TK){ //semicolon
                         i++;
+                        return p;
                     } else {
-                        printError(SCOLN_TK, i->getTokenInstance());
+                        printError("semicolon", i->getTokenInstance());
+                        return nullptr;
                     }
-
                 } else {
-                    printError(THEN_TK, i->getTokenInstance());
+                    printError("then keyword", i->getTokenInstance());
+                    return nullptr;
                 }
             } else {
-                printError(RBRC_TK, i->getTokenInstance());
+                printError("Right bracket", i->getTokenInstance());
+                return nullptr;
             }
         } else {
-            printError(LBRC_TK, i->getTokenInstance());
+            printError("Left bracket", i->getTokenInstance());
+            return nullptr;
         }
     } //else it's just not an if, don't increment the iterator yet
+    return nullptr;
 }
 
-void loop(vector<Token>::iterator& i){
+Node * loop(vector<Token>::iterator& i){
     //BNF is not ll1 => extra lookahead needed
     if (i->getTokenId() == RPT_TK){
         i++; //consume repeat token
         if (i->getTokenId() == LBRC_TK){ //if there is a right bracket, it's loop1
             i++; //consume the left bracket
-            loop1(i);
+            return loop1(i);
         } else {
-            loop2(i); //we did not consume the next token
-        }
-
-        //check for semicolon
-        if (i->getTokenId() == SCOLN_TK){
-            i++;
-        } else {
-            printError(SCOLN_TK, i->getTokenInstance());
+            return loop2(i); //we did not consume the next token
         }  
+    } else {
+        return nullptr;
     }
 }
-void loop1(vector<Token>::iterator& i){
+
+Node * loop1(vector<Token>::iterator& i){
+    Node * p = getNode("loop1");
     //<loop1> -> repeat  [ <expr> <RO> <expr> ]  <stat>
-    expr(i);
-    RO(i);
-    expr(i);
+    p->left = expr(i);
+    p->middle1 = RO(i);
+    p->middle2 = expr(i);
     if (i->getTokenId() == RBRC_TK){
         i++;
-        stat(i);
-    }
+        p->right = stat(i);
+    } else {
+        printError("Right Bracket", i->getTokenInstance());
+        return nullptr;
+    }  
+    //check for semicolon
+    if (i->getTokenId() == SCOLN_TK){
+        i++;
+        return p;
+    } else {
+        printError("semicolon", i->getTokenInstance());
+        return nullptr;
+    }  
 
 }
 
-void loop2(vector<Token>::iterator& i){
+Node * loop2(vector<Token>::iterator& i){
     //<loop2> -> repeat <stat> until [ <expr> <RO> <expr> ] 
-    stat(i);
+    Node * p = getNode("loop2");
+    p->left = stat(i);
     if (i->getTokenId() == UNT_TK){
         i++;
         if (i->getTokenId() == LBRC_TK){
             i++;
-            expr(i);
-            RO(i);
-            expr(i);
+            p->middle1 = expr(i);
+            p->middle2 = RO(i);
+            p->right = expr(i);
             if (i->getTokenId() == RBRC_TK) {
                 i++;
             } else {
-                printError(RBRC_TK, i->getTokenInstance());
+                printError("Right bracket", i->getTokenInstance());
+                return nullptr;
             }
         } else {
-            printError(LBRC_TK, i->getTokenInstance());
+            printError("Left Bracket", i->getTokenInstance());
+            return nullptr;
         }
     } else {
-        printError(UNT_TK, i->getTokenInstance());
+        printError("Until keyword", i->getTokenInstance());
+        return nullptr;
     }
+
+    //check for semicolon
+    if (i->getTokenId() == SCOLN_TK){
+        i++;
+        return p;
+    } else {
+        printError("semicolon", i->getTokenInstance());
+        return nullptr;
+    }  
 }
 
-void assign(vector<Token>::iterator& i){
+Node * assign(vector<Token>::iterator& i){
     //<assign> -> assign Identifier  = <expr>  
-    string idInstance = "";
 
-    if (i->getTokenId() == ASGN_KW_TK) {
+    if (i->getTokenId() == ASGN_KW_TK){
+        Node * p = getNode("assign");
         i++;
-        if (i->getTokenId() == ID_TK){
-            idInstance = i->getTokenInstance();
+        if (i->getTokenId() == ID_TK) {
+            p->token = i->getTokenInstance();
             i++;
             if (i->getTokenId() == ASGN_TK) {
                 i++;
-                expr(i);
+                p->left = expr(i);
 
                 //check for semicolon
                 if (i->getTokenId() == SCOLN_TK){
                     i++;
+                    return p;
                 } else {
-                    printError(SCOLN_TK, i->getTokenInstance());
+                    printError("semicolon", i->getTokenInstance());
+                    return nullptr;
                 } 
+            } else {
+                printError("Assignemnt operator", i->getTokenInstance());
+                return nullptr;
             }        
         } else {
-            printError(ID_TK, i->getTokenInstance());
+            printError("indentifier", i->getTokenInstance());
+            return nullptr;
         }
+    } else {
+        return nullptr;
     }
 }
 
-void label(vector<Token>::iterator& i){
+Node * label(vector<Token>::iterator& i){
     // <label> -> label Identifier
-    string idInstance = "";
-    cout << i->getTokenDescription();
+
     if (i->getTokenId() == LBL_TK) {
+        Node * p = getNode("label");
         i++;
         if (i->getTokenId() == ID_TK){
-            idInstance = i->getTokenInstance();
+            p->token = i->getTokenInstance();
             i++;
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
+                return p;
             } else {
-                printError(SCOLN_TK, i->getTokenInstance());
+                printError("semnicolon", i->getTokenInstance());
+                return nullptr;
             }       
         } else {
-            printError(ID_TK, i->getTokenInstance());
+            printError("identifier", i->getTokenInstance());
+            return nullptr;
         }
+    } else {
+        return nullptr;
     }
 }
 
-void gotoStat(vector<Token>::iterator& i){
-    string idInstance = "";
+Node * gotoStat(vector<Token>::iterator& i){
     if (i->getTokenId() == PTL_TK) {
+        Node * p = getNode("goto");
         i++;
         if (i->getTokenId() == ID_TK){
-            idInstance = i->getTokenInstance();
+            p->token = i->getTokenInstance();
             i++;
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
+                return p;
             } else {
-                printError(SCOLN_TK, i->getTokenInstance());
+                printError("semicolon", i->getTokenInstance());
+                return nullptr;
             }       
         } else {
-            printError(ID_TK, i->getTokenInstance());
+            printError("identifier", i->getTokenInstance());
+            return nullptr;
         }
+    } else {
+        return nullptr;
     }
 }
 
-void RO(vector<Token>::iterator& i){
-    int op = 0;
+Node * RO(vector<Token>::iterator& i){
+    Node * p = getNode("RO");
     switch(i->getTokenId())
     {
         case LTE_TK:
         case GRTE_TK:
         case EQ_TK:
         case NTEQ_TK:
-            op = i->getTokenId();
-            cout << "RO: " << i->getTokenDescription() << endl;
+            p->token = i->getTokenInstance();
             i++;
             break;
         case DOT_TK:
@@ -428,20 +524,23 @@ void RO(vector<Token>::iterator& i){
             if (i->getTokenId() == DOT_TK) {
                 i++;
                 if (i->getTokenId() == DOT_TK){
-                    op = DOT_TK;
-                    cout << "RO: " << i->getTokenDescription() << endl;
+                    p->token = "...";
                     i++;
                 } else {
-                    printError(DOT_TK, i->getTokenInstance());
+                    printError("dot", i->getTokenInstance());
+                    return nullptr;
                 }
             } else {
-                printError(DOT_TK, i->getTokenInstance());
+                printError("dot", i->getTokenInstance());
+                return nullptr;
             }
             break;
         default:
-            printError(LTE_ERR, i->getTokenInstance()); // should just be relational operator
+            printError("Relational Operator (<=, >=, ==, ..., or !=)", i->getTokenInstance());
+            return nullptr;
             break;
     }
+    return p;
 }
 
 
