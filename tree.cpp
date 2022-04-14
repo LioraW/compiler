@@ -16,6 +16,7 @@ Node * getNode(string label) {
 	//Create a new node
 	newNode = new Node;
 	newNode->label = label;
+	newNode->token = "";
 	newNode->left = newNode->middle1 = newNode->middle2 = newNode->right = nullptr;
 
 	return newNode;
@@ -36,7 +37,7 @@ void destroySubTree(Node *nodePtr) {
 	}
 }
 
-void processNode(string word, int level) {
+void processNode(Node * nodePtr, int level) {
 
 	//indent 2*level
 	int numSpaces = level * 2;
@@ -44,14 +45,18 @@ void processNode(string word, int level) {
 		cout << " ";
 	
 	// write word to file
-	cout << word << endl;
+	cout << nodePtr->label;
+	if (nodePtr->token != ""){
+		cout << ": " << nodePtr->token;
+	}
+	cout << endl;
 
 }
 
 void printPreorder(Node *nodePtr, int level) {
 	//display the tree's nodes in pre order
 	if (nodePtr) {
-		processNode(nodePtr->label, level);
+		processNode(nodePtr, level);
 		printPreorder(nodePtr->left, level + 1); 
 		printPreorder(nodePtr->middle1, level + 1);
 		printPreorder(nodePtr->middle2, level + 1);

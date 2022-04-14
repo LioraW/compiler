@@ -1,10 +1,11 @@
-## p2g6, lastly, you want to very thoroughly test expressions with variations of below##
-declare a := whole ;
-declare b := whole ;
-declare c := whole ;
+## p2g4 ##
+declare z := whole ;
 main
 {
-    assign a = 3 ;
-    assign c = 19 ;
-    yell ( 2 * a / 5 + c - % 11 + ( 13 * % 17 ) ) ;
+declare y := whole ;
+assign y = 10 ;
+assign z = 17 ;
+repeat [ y <= z ]
+    assign x = y ; ;
+yell x ;
 }

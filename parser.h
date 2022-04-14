@@ -6,7 +6,7 @@
 
 vector<Token> scannerUtility(string fileName);
 void parser(string fileName);
-void printError(int expecting, string actual);
+void printError(int expecting, const vector<Token>::iterator i);
 
 //BNF
 Node * program(vector<Token>::iterator& i);

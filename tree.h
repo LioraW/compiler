@@ -6,7 +6,7 @@
 
 	Node * getNode(string label);						//allocate memeory for a node
 	void destroySubTree(Node *nodePtr);				 	//delete all of the nodes below and including the given node
-	void processNode(string word, int level); 			//print the node
+	void processNode(Node *nodePtr, int level); 		//print the node
     void printPreorder(Node *nodePtr, int level);       //display the tree's node in pre order
 
 

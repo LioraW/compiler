@@ -20,11 +20,7 @@ void parser(string fileName){
 
     Node * root = nullptr;
 
-    if (!tokens.back().isError()){
-
-        //bandaid for right now
-        Token endToken = Token(EOF_TK, "EOF", 0, 0);
-        tokens.push_back(endToken);
+    if (!tokens.back().isError() && !tokens.empty()){
 
         //start parsing
         vector<Token>::iterator i = tokens.begin();
@@ -34,13 +30,18 @@ void parser(string fileName){
 
         printPreorder(root, 0);
 
-    } else {
-        cout << "SCANNER ERROR: " << tokens.back().getTokenDescription() << endl;
+        destroySubTree(root); //cleanup
+
+    } else if (!tokens.empty()){ //if it is empty there was a file error, the error was already send to stdout
+        cout << "SCANNER ERROR: " << tokens.back().getTokenDescription();
+        cout << " on line " << tokens.back().getLineNumber() << ", char " << tokens.back().getCharNumber()  << endl;
     }
 }
 
-void printError(string expecting, string actual){
-    cout << "Expecting " << expecting << "; Instead found " << actual << endl;
+void printError(string expecting, const vector<Token>::iterator token) {
+    cout << "PARSER ERROR: line " << token->getLineNumber() << ", char " << token->getCharNumber() << ": ";
+    cout << "Expecting " << expecting << "; Instead found " << token->getTokenInstance() << endl;
+ 
 }
 
 Node * program(vector<Token>::iterator& i){
@@ -52,7 +53,7 @@ Node * program(vector<Token>::iterator& i){
         i++;
         p->right = block(i);
     } else {
-        printError("main keyword", i->getTokenInstance());
+        printError("main keyword", i);
         return nullptr;
     }
     return p;
@@ -72,8 +73,7 @@ Node * block(vector<Token>::iterator& i){
                 return p;
             }
         } else {
-            
-            printError("Right bracket after block", i->getTokenInstance());
+            printError("Right bracket", i);
             return nullptr;
         }
     }
@@ -99,20 +99,20 @@ Node * vars (vector<Token>::iterator& i){
                         p->right = vars(i);
                         return p;
                     } else {
-                        printError("semicolon", i->getTokenInstance());
+                        printError("semicolon", i);
                         return nullptr;
                     }
                 } else { //error conditions
-                    printError("Whole keyword", i->getTokenInstance());
+                    printError("Whole keyword", i);
                     return nullptr;
                 }
 
             } else {
-                printError("Colon Equals", i->getTokenInstance());
+                printError("Colon Equals", i);
                 return nullptr;
             }
         } else {
-            printError("Identifier", i->getTokenInstance());
+            printError("Identifier", i);
             return nullptr;
         }
     } else {
@@ -122,7 +122,7 @@ Node * vars (vector<Token>::iterator& i){
 
 Node * expr(vector<Token>::iterator& i){
     // <expr> -> <N> - <expr>  | <N>
-    Node * p = getNode("expression");
+    Node * p = getNode("expr");
     p->left = N(i);
     if (i->getTokenId() == MINUS_TK){
         i++;
@@ -143,22 +143,16 @@ Node * N(vector<Token>::iterator& i) {
 
 Node * X(vector<Token>::iterator& i) {
     //<X> ->  / <A><X> | +<A><X> |  empty
-    Node * p = getNode("P");
-
-    if (i->getTokenId() == DIV_TK){
+    if (i->getTokenId() == DIV_TK || i->getTokenId() == PLUS_TK ){
+        Node * p = getNode("X");
+        p->token = i->getTokenInstance();
         i++;
-        p->token = "/";
         p->left = A(i);
         p->right = X(i); //right recursive
-    } else if (i->getTokenId() == PLUS_TK) {
-        i++;
-        p->token = "+";
-        p->left = A(i);
-        p->right = X(i);
+        return p;
     } else {
         return nullptr; //empty
     }
-    return p;
 }
 
 Node * A(vector<Token>::iterator& i) {
@@ -169,9 +163,6 @@ Node * A(vector<Token>::iterator& i) {
         i++;
         p->token = "*";
         p->right = A(i);
-
-    } else {
-        return nullptr; //does not need another piece
     }
     return p;
 }
@@ -196,22 +187,23 @@ Node * R(vector<Token>::iterator& i) {
     Node * p = getNode("R");
 
    if (i->getTokenId() == LPRN_TK) {
+
        i++;
        p->middle1 = expr(i);
        if (i-> getTokenId() == RPRN_TK){
            i++;
        } else {
-           printError("Right parentheses", i->getTokenInstance());
+           printError("Right parentheses", i);
            return nullptr;
        }
    } else if (i->getTokenId() == ID_TK) {
-       i++;
        p->token = i->getTokenInstance();
+       i++;
    } else if (i->getTokenId() == NUM_TK) {
-       i++;
        p->token = i->getTokenInstance();
+       i++;
    } else {
-       printError("Expression in parantheses, identifier, or number", i->getTokenInstance());
+       printError("Expression in parantheses, identifier, or number", i);
        return nullptr;
    }
    return p;
@@ -281,11 +273,11 @@ Node * in(vector<Token>::iterator& i){
                 i++;
                 return p;
             } else {
-                printError("semicolon", i->getTokenInstance());
+                printError("semicolon", i);
                 return nullptr;
             }
         } else {
-            printError("identifier", i->getTokenInstance());
+            printError("identifier", i);
             return nullptr;
         }
     }
@@ -303,7 +295,7 @@ Node * out(vector<Token>::iterator& i){
             i++;
             return p;
         } else {
-            printError("semicolon", i->getTokenInstance());
+            printError("semicolon", i);
             return nullptr;
         }
     }
@@ -330,19 +322,19 @@ Node * ifStat(vector<Token>::iterator& i){
                         i++;
                         return p;
                     } else {
-                        printError("semicolon", i->getTokenInstance());
+                        printError("semicolon", i);
                         return nullptr;
                     }
                 } else {
-                    printError("then keyword", i->getTokenInstance());
+                    printError("then keyword", i);
                     return nullptr;
                 }
             } else {
-                printError("Right bracket", i->getTokenInstance());
+                printError("Right bracket", i);
                 return nullptr;
             }
         } else {
-            printError("Left bracket", i->getTokenInstance());
+            printError("Left bracket", i);
             return nullptr;
         }
     } //else it's just not an if, don't increment the iterator yet
@@ -374,7 +366,7 @@ Node * loop1(vector<Token>::iterator& i){
         i++;
         p->right = stat(i);
     } else {
-        printError("Right Bracket", i->getTokenInstance());
+        printError("Right Bracket", i);
         return nullptr;
     }  
     //check for semicolon
@@ -382,7 +374,7 @@ Node * loop1(vector<Token>::iterator& i){
         i++;
         return p;
     } else {
-        printError("semicolon", i->getTokenInstance());
+        printError("semicolon", i);
         return nullptr;
     }  
 
@@ -402,15 +394,15 @@ Node * loop2(vector<Token>::iterator& i){
             if (i->getTokenId() == RBRC_TK) {
                 i++;
             } else {
-                printError("Right bracket", i->getTokenInstance());
+                printError("Right bracket", i);
                 return nullptr;
             }
         } else {
-            printError("Left Bracket", i->getTokenInstance());
+            printError("Left Bracket", i);
             return nullptr;
         }
     } else {
-        printError("Until keyword", i->getTokenInstance());
+        printError("Until keyword", i);
         return nullptr;
     }
 
@@ -419,7 +411,7 @@ Node * loop2(vector<Token>::iterator& i){
         i++;
         return p;
     } else {
-        printError("semicolon", i->getTokenInstance());
+        printError("semicolon", i);
         return nullptr;
     }  
 }
@@ -442,15 +434,15 @@ Node * assign(vector<Token>::iterator& i){
                     i++;
                     return p;
                 } else {
-                    printError("semicolon", i->getTokenInstance());
+                    printError("semicolon", i);
                     return nullptr;
                 } 
             } else {
-                printError("Assignemnt operator", i->getTokenInstance());
+                printError("Assignemnt operator", i);
                 return nullptr;
             }        
         } else {
-            printError("indentifier", i->getTokenInstance());
+            printError("indentifier", i);
             return nullptr;
         }
     } else {
@@ -472,11 +464,11 @@ Node * label(vector<Token>::iterator& i){
                 i++;
                 return p;
             } else {
-                printError("semnicolon", i->getTokenInstance());
+                printError("semnicolon", i);
                 return nullptr;
             }       
         } else {
-            printError("identifier", i->getTokenInstance());
+            printError("identifier", i);
             return nullptr;
         }
     } else {
@@ -496,11 +488,11 @@ Node * gotoStat(vector<Token>::iterator& i){
                 i++;
                 return p;
             } else {
-                printError("semicolon", i->getTokenInstance());
+                printError("semicolon", i);
                 return nullptr;
             }       
         } else {
-            printError("identifier", i->getTokenInstance());
+            printError("identifier", i);
             return nullptr;
         }
     } else {
@@ -527,16 +519,16 @@ Node * RO(vector<Token>::iterator& i){
                     p->token = "...";
                     i++;
                 } else {
-                    printError("dot", i->getTokenInstance());
+                    printError("dot", i);
                     return nullptr;
                 }
             } else {
-                printError("dot", i->getTokenInstance());
+                printError("dot", i);
                 return nullptr;
             }
             break;
         default:
-            printError("Relational Operator (<=, >=, ==, ..., or !=)", i->getTokenInstance());
+            printError("Relational Operator (<=, >=, ==, ..., or !=)", i);
             return nullptr;
             break;
     }
