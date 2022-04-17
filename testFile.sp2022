@@ -2,10 +2,6 @@
 declare z := whole ;
 main
 {
-declare y := whole ;
-assign y = 10 ;
-assign z = 17 ;
-repeat [ y <= z ]
-    assign x = y ; ;
-yell x ;
+    declare y := whole ;
+    declare x := whole ;
 }

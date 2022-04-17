@@ -1,19 +1,23 @@
-P1 Scanner CS4280
+P3 Static Semantics CS4280
 Liora Wachsstock
 
-I am using option 3, FSA table + driver.
-The FSA table is in the file FSAtable.h and the driver is in the file scanner.h, using a combination of the scanner, filter, and FSAcolumn functions.
+Storage = Local 
 
 COMPILATION AND EXECUTION:
 For easy compilation use "Make".
+
 Execution: 
-./scanner (it will take input from stdin until you type "EOF") OR
-./scanner testFile.sp2022 (.sp2022 is a required extension type) OR
-./scanner < testFile.sp2022
+./statSem (it will take input from stdin until you type "EOF") OR
+./statSem testFile.sp2022 (.sp2022 is a required extension type) OR
+./statSem < testFile.sp2022
 
 
 ORGANIZATION:
 main.cpp: validates filename and starts program
+
+parse.cpp/parser.h: parser code
+
+tree.cpp/tree.h: tree code
 
 testScanner.cpp: tests the scanner by feeding it the input file and printing the resulting tokens
 scanner.cpp: contains FSA driver code and main scanner
