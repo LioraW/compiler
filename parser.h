@@ -7,6 +7,7 @@
 
 void parser(string fileName);
 vector<Token> scannerUtility(string fileName);
+string scannerError(Token token);
 string parserError(int expecting, const vector<Token>::iterator i);
 string statSemError(string variableName);
 void printError(string errorMessage);
