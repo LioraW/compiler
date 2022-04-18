@@ -1,7 +1,19 @@
-## p2g4 ##
-declare z := whole ;
+declare _z := whole ;
+declare y := whole ;
+declare x := whole ;
+
 main
 {
-    declare y := whole ;
-    declare x := whole ;
+declare y := whole ;
+declare z := whole ;
+
+assign y = 10 ;
+repeat [ y >= z ]
+  {
+  declare v := whole ;
+     {
+     yell x ; 
+     }
+  } ;
+yell v ;
 }

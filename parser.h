@@ -5,9 +5,11 @@
 #include "node.h"
 #include "stack.h"
 
-vector<Token> scannerUtility(string fileName);
 void parser(string fileName);
-void printError(int expecting, const vector<Token>::iterator i);
+vector<Token> scannerUtility(string fileName);
+string parserError(int expecting, const vector<Token>::iterator i);
+string statSemError(string variableName);
+void printError(string errorMessage);
 
 //BNF
 Node * program  (vector<Token>::iterator& i, Stack& varStack);

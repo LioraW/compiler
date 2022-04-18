@@ -15,23 +15,21 @@
 using namespace std;
 
 void parser(string fileName){
+    Node * root = nullptr;  //parse tree
+    Stack varStack;         //tracks variable declarations
     
     //get tokens
     vector<Token> tokens = scannerUtility(fileName);
-
-    Node * root = nullptr;
 
     if (!tokens.back().isError() && !tokens.empty()){
 
         //start parsing
         vector<Token>::iterator i = tokens.begin();
 
-        Stack varStack;
-        
         //create parse tree
         root = program(i, varStack); 
 
-        printPreorder(root, 0);
+        // printPreorder(root, 0);
 
         destroySubTree(root); //cleanup
 
@@ -41,11 +39,73 @@ void parser(string fileName){
     }
 }
 
-void printError(string expecting, const vector<Token>::iterator token) {
-    cout << "PARSER ERROR: line " << token->getLineNumber() << ", char " << token->getCharNumber() << ": ";
-    cout << "Expecting " << expecting << "; Instead found " << token->getTokenInstance() << endl;
- 
+// Takes in a filename and feeds the lines of that file to the scanner, which returns a token and testScanner prints out the token.
+vector<Token> scannerUtility(string fileName) {
+    vector<Token> tokens;
+
+    fstream file;
+    string line;
+    int numberLines = 0;
+    int charNum = 0;
+    bool openComment = false; 
+
+    // Open the file
+    file.open(fileName);
+    if (file.is_open()) {
+        
+        // Go through the file line by line
+        while (getline(file, line)) { 
+            numberLines++;
+            charNum = 0;
+
+            // Go through the file character by character
+            while (charNum < line.length()) {
+                
+                //receive the tokens as they become relavent
+                Token token = scanner(line, charNum, openComment, numberLines, file);
+                
+                // print the tokens
+                if (token.isFinal()) {
+                    tokens.push_back(token);
+
+                    if (token.getTokenId() == EOF_TK) {
+                        file.close();
+                        return tokens;
+                    }
+                
+                } else if (token.isError() && token.getTokenId() != WS_E) {
+                    tokens.push_back(token);
+                    file.close();
+                    return tokens;
+                } 
+            }
+        }
+    } else {
+        cerr << "Unable to open file: " << fileName << endl;
+    }   
+    file.close();
+    return tokens;   
 }
+
+string parserError(string expecting, const vector<Token>::iterator token) {
+    return "PARSER ERROR: line " + to_string(token->getLineNumber()) + 
+    ", char " + to_string(token->getCharNumber()) + ": " 
+    + "Expecting " + expecting + "; Instead found " + token->getTokenInstance() + "\n";
+}
+
+string statSemError(string variableName){
+    return "ERROR: variable \'" + variableName + "\' was used without being declared in this scope.\n";
+}
+
+void printError(string errorMessage) {
+    static bool printedError = false; // error and exit with only one error message
+    if (!printedError){
+        cout << errorMessage;
+    }
+    printedError = true;
+}
+
+//Start implementation of BNF:
 
 Node * program(vector<Token>::iterator& i, Stack& varStack){
     Node * p = getNode("program");
@@ -57,7 +117,7 @@ Node * program(vector<Token>::iterator& i, Stack& varStack){
         i++;
         p->right = block(i, varStack);
     } else {
-        printError("main keyword", i);
+        printError(parserError("main keyword", i));
         return nullptr;
     }
     varStack.popCurrentBlock();
@@ -79,7 +139,7 @@ Node * block(vector<Token>::iterator& i, Stack& varStack){
             varStack.popCurrentBlock();
             return p;
         } else {
-            printError("Right bracket", i);
+            printError(parserError("Right bracket", i));
         }
     }
     return nullptr;
@@ -102,26 +162,26 @@ Node * vars (vector<Token>::iterator& i, Stack& varStack){
                         i++;
                         p->right = vars(i, varStack);
 
-                        //Add the new variable to the stack
-                         if (varStack.varAlreadyInScope(p->token)){
-                            cout << "Multiple definition! " << p->token << " already declared in local scope. " << endl;
-                            return nullptr; //error
+                        //Add the new variable to the stack if not already declared locally 
+                         if (varStack.varDeclaredInLocalScope(p->token)){
+                             printError("Multiple definition! " + p->token + " already declared in local scope.\n");
+                            return nullptr;
                         }
                         varStack.push(p->token); 
                         varStack.incrementCurrentBlockVarCount();
 
                         return p;
                     } else {
-                        printError("semicolon", i);
+                        printError(parserError("semicolon", i));
                     }
                 } else {
-                    printError("Whole keyword", i);
+                    printError(parserError("Whole keyword", i));
                 }
             } else {
-                printError("Colon Equals", i);
+                printError(parserError("Colon Equals", i));
             }
         } else {
-            printError("Identifier", i);
+            printError(parserError("Identifier", i));
         }
     }
     return nullptr; //if it reached this point there was an error or it was empty
@@ -200,18 +260,22 @@ Node * R(vector<Token>::iterator& i, Stack& varStack) {
        if (i-> getTokenId() == RPRN_TK){
            i++;
        } else {
-           printError("Right parentheses", i);
+           printError(parserError("Right parentheses", i));
            return nullptr;
        }
-   } else if (i->getTokenId() == ID_TK) {
-       
+    } else if (i->getTokenId() == NUM_TK) {
        p->token = i->getTokenInstance();
        i++;
-   } else if (i->getTokenId() == NUM_TK) {
-       p->token = i->getTokenInstance();
-       i++;
+    } else if (i->getTokenId() == ID_TK) {
+        if (varStack.find(i->getTokenInstance()) != -1){
+            p->token = i->getTokenInstance();
+            i++;
+        } else {
+           printError(statSemError(i->getTokenInstance()));
+           return nullptr;
+        }
    } else {
-       printError("Expression in parantheses, identifier, or number", i);
+       printError(parserError("Expression in parentheses, identifier, or number", i));
        return nullptr;
    }
    return p;
@@ -273,19 +337,24 @@ Node * in(vector<Token>::iterator& i, Stack& varStack){
         Node * p = getNode("in");
         i++;
         if (i->getTokenId() == ID_TK){
-            p->token = i->getTokenInstance();
-            i++;
-     
+
+            if (varStack.find(i->getTokenInstance()) != -1){
+                p->token = i->getTokenInstance();
+                i++;
+            } else {
+                printError(statSemError(i->getTokenInstance()));
+                return nullptr; 
+            }
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
                 return p;
             } else {
-                printError("semicolon", i);
+                printError(parserError("semicolon", i));
                 return nullptr;
             }
         } else {
-            printError("identifier", i);
+            printError(parserError("identifier", i));
             return nullptr;
         }
     }
@@ -303,7 +372,7 @@ Node * out(vector<Token>::iterator& i, Stack& varStack){
             i++;
             return p;
         } else {
-            printError("semicolon", i);
+            printError(parserError("semicolon", i));
             return nullptr;
         }
     }
@@ -330,19 +399,19 @@ Node * ifStat(vector<Token>::iterator& i, Stack& varStack){
                         i++;
                         return p;
                     } else {
-                        printError("semicolon", i);
+                        printError(parserError("semicolon", i));
                         return nullptr;
                     }
                 } else {
-                    printError("then keyword", i);
+                    printError(parserError("then keyword", i));
                     return nullptr;
                 }
             } else {
-                printError("Right bracket", i);
+                printError(parserError("Right bracket", i));
                 return nullptr;
             }
         } else {
-            printError("Left bracket", i);
+            printError(parserError("Left bracket", i));
             return nullptr;
         }
     } //else it's just not an if, don't increment the iterator yet
@@ -374,7 +443,7 @@ Node * loop1(vector<Token>::iterator& i, Stack& varStack){
         i++;
         p->right = stat(i, varStack);
     } else {
-        printError("Right Bracket", i);
+        printError(parserError("Right Bracket", i));
         return nullptr;
     }  
     //check for semicolon
@@ -382,7 +451,7 @@ Node * loop1(vector<Token>::iterator& i, Stack& varStack){
         i++;
         return p;
     } else {
-        printError("semicolon", i);
+        printError(parserError("semicolon", i));
         return nullptr;
     }  
 
@@ -402,15 +471,15 @@ Node * loop2(vector<Token>::iterator& i, Stack& varStack){
             if (i->getTokenId() == RBRC_TK) {
                 i++;
             } else {
-                printError("Right bracket", i);
+                printError(parserError("Right bracket", i));
                 return nullptr;
             }
         } else {
-            printError("Left Bracket", i);
+            printError(parserError("Left Bracket", i));
             return nullptr;
         }
     } else {
-        printError("Until keyword", i);
+        printError(parserError("Until keyword", i));
         return nullptr;
     }
 
@@ -419,7 +488,7 @@ Node * loop2(vector<Token>::iterator& i, Stack& varStack){
         i++;
         return p;
     } else {
-        printError("semicolon", i);
+        printError(parserError("semicolon", i));
         return nullptr;
     }  
 }
@@ -431,8 +500,15 @@ Node * assign(vector<Token>::iterator& i, Stack& varStack){
         Node * p = getNode("assign");
         i++;
         if (i->getTokenId() == ID_TK) {
-            p->token = i->getTokenInstance();
-            i++;
+            
+            if (varStack.find(i->getTokenInstance()) != -1 ){
+                p->token = i->getTokenInstance();
+                i++;
+            } else {
+                printError(statSemError(i->getTokenInstance()));
+                return nullptr; 
+            }
+            
             if (i->getTokenId() == ASGN_TK) {
                 i++;
                 p->left = expr(i, varStack);
@@ -442,15 +518,15 @@ Node * assign(vector<Token>::iterator& i, Stack& varStack){
                     i++;
                     return p;
                 } else {
-                    printError("semicolon", i);
+                    printError(parserError("semicolon", i));
                     return nullptr;
                 } 
             } else {
-                printError("Assignemnt operator", i);
+                printError(parserError("Assignemnt operator", i));
                 return nullptr;
             }        
         } else {
-            printError("indentifier", i);
+            printError(parserError("indentifier", i));
             return nullptr;
         }
     } else {
@@ -465,18 +541,25 @@ Node * label(vector<Token>::iterator& i, Stack& varStack){
         Node * p = getNode("label");
         i++;
         if (i->getTokenId() == ID_TK){
-            p->token = i->getTokenInstance();
-            i++;
+
+            if (varStack.find(i->getTokenInstance()) != -1) {
+                p->token = i->getTokenInstance();
+                i++;
+            } else {
+                printError(statSemError(i->getTokenInstance()));
+                return nullptr; 
+            }
+            
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
                 return p;
             } else {
-                printError("semnicolon", i);
+                printError(parserError("semnicolon", i));
                 return nullptr;
             }       
         } else {
-            printError("identifier", i);
+            printError(parserError("identifier", i));
             return nullptr;
         }
     } else {
@@ -489,18 +572,24 @@ Node * gotoStat(vector<Token>::iterator& i, Stack& varStack){
         Node * p = getNode("goto");
         i++;
         if (i->getTokenId() == ID_TK){
-            p->token = i->getTokenInstance();
-            i++;
+            
+            if (varStack.find(i->getTokenInstance()) != -1) {
+                p->token = i->getTokenInstance();
+                i++;
+            } else {
+                printError(statSemError(i->getTokenInstance()));
+                return nullptr; 
+            }
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
                 return p;
             } else {
-                printError("semicolon", i);
+                printError(parserError("semicolon", i));
                 return nullptr;
             }       
         } else {
-            printError("identifier", i);
+            printError(parserError("identifier", i));
             return nullptr;
         }
     } else {
@@ -527,16 +616,16 @@ Node * RO(vector<Token>::iterator& i, Stack& varStack){
                     p->token = "...";
                     i++;
                 } else {
-                    printError("dot", i);
+                    printError(parserError("dot", i));
                     return nullptr;
                 }
             } else {
-                printError("dot", i);
+                printError(parserError("dot", i));
                 return nullptr;
             }
             break;
         default:
-            printError("Relational Operator (<=, >=, ==, ..., or !=)", i);
+            printError(parserError("Relational Operator (<=, >=, ==, ..., or !=)", i));
             return nullptr;
             break;
     }
@@ -544,51 +633,5 @@ Node * RO(vector<Token>::iterator& i, Stack& varStack){
 }
 
 
-// Takes in a filename and feeds the lines of that file to the scanner, which returns a token and testScanner prints out the token.
-vector<Token> scannerUtility(string fileName) {
-    vector<Token> tokens;
 
-    fstream file;
-    string line;
-    int numberLines = 0;
-    int charNum = 0;
-    bool openComment = false; 
-
-    // Open the file
-    file.open(fileName);
-    if (file.is_open()) {
-        
-        // Go through the file line by line
-        while (getline(file, line)) { 
-            numberLines++;
-            charNum = 0;
-
-            // Go through the file character by character
-            while (charNum < line.length()) {
-                
-                //receive the tokens as they become relavent
-                Token token = scanner(line, charNum, openComment, numberLines, file);
-                
-                // print the tokens
-                if (token.isFinal()) {
-                    tokens.push_back(token);
-
-                    if (token.getTokenId() == EOF_TK) {
-                        file.close();
-                        return tokens;
-                    }
-                
-                } else if (token.isError() && token.getTokenId() != WS_E) {
-                    tokens.push_back(token);
-                    file.close();
-                    return tokens;
-                } 
-            }
-        }
-    } else {
-        cerr << "Unable to open file: " << fileName << endl;
-    }   
-    file.close();
-    return tokens;   
-}
 

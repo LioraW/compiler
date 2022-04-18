@@ -3,6 +3,8 @@ Liora Wachsstock
 
 Storage = Local 
 
+Global variables are processed as local varibles in the top scope. (This is one of the options in the requirments.)
+
 COMPILATION AND EXECUTION:
 For easy compilation use "Make".
 
@@ -15,15 +17,20 @@ Execution:
 ORGANIZATION:
 main.cpp: validates filename and starts program
 
-parse.cpp/parser.h: parser code
+parser.cpp/parser.h: parser code (implementation of BNF)
 
-tree.cpp/tree.h: tree code
+tree.cpp/tree.h: code for parse tree
+
+stack.cpp/stack.h: code for static semantics (keeping track of declared variables)
 
 testScanner.cpp: tests the scanner by feeding it the input file and printing the resulting tokens
+
 scanner.cpp: contains FSA driver code and main scanner
 
 token.cpp/token.h: contains code for holding token types, including descriptions
+
 tokenID.h: contains enums for states, final token values, and error codes
 
 FSAtable.h: contains a 2D array of states
+
 Characters.h: contains enum for column numbers for the FSA table
