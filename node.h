@@ -3,12 +3,13 @@
 
 #include <string>
 #include "tokenID.h"
+#include "labels.h"
 
 using namespace std;
 
 struct Node
 	{
-		string label;		//function that createed this non terminal
+		Label label;		//enum that represents the function that createed this non terminal
 		string token;       //potential tokens that need to be stored
 
 		Node *left;		  //pointer to left child node

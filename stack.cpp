@@ -118,6 +118,7 @@ void Stack::popCurrentBlock(){
    pop(); //pop the block placeholder off too
 }
 
+
 //returns true if stack is empty and false otherwise
 bool Stack::isEmpty() {
     return !top;

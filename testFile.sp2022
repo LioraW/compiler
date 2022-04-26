@@ -1,20 +1,7 @@
-declare _z := whole ;
-declare y := whole ;
+## p2g6, lastly, you want to very thoroughly test expressions with variations of below##
 declare x := whole ;
 
-main 
+main
 {
-declare y := whole ;
-declare z := whole ;
-declare v := whole ;
-
-assign y = 10 ;
-repeat [ y + 10 >= z ]
-{
-  
-     {
-     yell x;
-     }
-  } ;
-##yell v ;
-}##
+    listen x;
+}

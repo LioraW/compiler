@@ -3,7 +3,10 @@
 #include <fstream>
 #include <vector>
 
+
+#include "codeGen.h"
 #include "parser.h"
+#include "node.h"
 
 bool fileNameContainsDot(string FileName);
 string validateFileName(string fileName);
@@ -31,9 +34,12 @@ int main(int argc, char **argv) {
         fileName = validateFileName(argv[1]);
     }
     
-if (fileName != "") {
-    parser(fileName + ".sp2022");
-}
+    if (fileName != "") {
+        Node * tree = parser(fileName + ".sp2022");
+
+        codeGen("filodough", tree);
+
+    }
 
     return 0;
 }

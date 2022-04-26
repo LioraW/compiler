@@ -5,7 +5,7 @@
 #include "node.h"
 #include "stack.h"
 
-void parser(string fileName);
+Node * parser(string fileName);
 vector<Token> scannerUtility(string fileName);
 string scannerError(Token token);
 string parserError(int expecting, const vector<Token>::iterator i);
