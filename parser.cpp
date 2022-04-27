@@ -12,12 +12,12 @@
 #include "node.h"
 #include "stack.h"
 #include "labels.h"
+#include "utils.h"
 
 using namespace std;
 
 Node * parser(string fileName){
     Node * root = nullptr;  //parse tree
-    Stack varStack;         //tracks variable declarations
     
     //get tokens
     vector<Token> tokens = scannerUtility(fileName);
@@ -28,7 +28,7 @@ Node * parser(string fileName){
         vector<Token>::iterator i = tokens.begin();
 
         //create parse tree
-        root = program(i, varStack); 
+        root = program(i); 
 
         //destroySubTree(root); //cleanup
 
@@ -95,61 +95,42 @@ string scannerError(Token token){
 string parserError(string expecting, const vector<Token>::iterator token) {
     return "PARSER ERROR: line " + to_string(token->getLineNumber()) + ", char " + to_string(token->getCharNumber()) + ": "  + "Expecting " + expecting + "; Instead found " + token->getTokenInstance() + "\n";
 }
-
-string statSemError(string variableName){
-    return "ERROR: variable \'" + variableName + "\' was used without being declared in this scope.\n";
-}
-
-void printError(string errorMessage) {
-    static bool printedError = false; // error and exit with only one error message
-    if (!printedError){
-        cout << errorMessage;
-    }
-    printedError = true;
-}
-
 //Start implementation of BNF:
 
-Node * program(vector<Token>::iterator& i, Stack& varStack){
+Node * program(vector<Token>::iterator& i){
     Node * p = getNode(PROGRAM_LBL);
     
-    varStack.pushPlaceholder();
-    p->left = vars(i, varStack);
+    p->left = vars(i);
 
     if (i->getTokenId() == MN_TK){
         i++;
-        p->right = block(i, varStack);
+        p->right = block(i);
     } else {
         printError(parserError("main keyword", i));
         return nullptr;
     }
-    varStack.popCurrentBlock();
     return p;
 
 }
-Node * block(vector<Token>::iterator& i, Stack& varStack){
+Node * block(vector<Token>::iterator& i){
     if (i->getTokenId() == LCBRC_TK){
         
-        varStack.pushPlaceholder();
-
         Node * p = getNode(BLOCK_LBL);
         i++;
-        p->middle1 = vars(i, varStack);
-        p->middle2 = stats(i, varStack);
+        p->middle1 = vars(i);
+        p->middle2 = stats(i);
 
         if(i->getTokenId() == RCBRC_TK) {
             i++;
-            varStack.popCurrentBlock();
             return p;
         } else {
             printError(parserError("Right bracket", i));
         }
     }
-    return nullptr;
-    
+    return nullptr;   
 }
 
-Node * vars (vector<Token>::iterator& i, Stack& varStack){
+Node * vars (vector<Token>::iterator& i){
     //  empty | declare Identifier :=  whole  ;  <vars>
     if (i->getTokenId() == DEC_TK){
         Node * p = getNode(VARS_LBL);
@@ -163,16 +144,7 @@ Node * vars (vector<Token>::iterator& i, Stack& varStack){
                     i++;
                     if(i->getTokenId() == SCOLN_TK){
                         i++;
-                        p->right = vars(i, varStack);
-
-                        //Add the new variable to the stack if not already declared locally 
-                         if (varStack.varDeclaredInLocalScope(p->token)){
-                             printError("Multiple definition! " + p->token + " already declared in this local scope.\n");
-                            return nullptr;
-                        }
-                        varStack.push(p->token); 
-                        varStack.incrementCurrentBlockVarCount();
-
+                        p->right = vars(i);
                         return p;
                     } else {
                         printError(parserError("semicolon", i));
@@ -190,75 +162,75 @@ Node * vars (vector<Token>::iterator& i, Stack& varStack){
     return nullptr; //if it reached this point there was an error or it was empty
 }
 
-Node * expr(vector<Token>::iterator& i, Stack& varStack){
+Node * expr(vector<Token>::iterator& i){
     // <expr> -> <N> - <expr>  | <N>
     Node * p = getNode(EXPR_LBL);
-    p->left = N(i, varStack);
+    p->left = N(i);
     if (i->getTokenId() == MINUS_TK){
         i++;
         p->token = "-";
-        p->right = expr(i, varStack);
+        p->right = expr(i);
     }
     return p;
 
 }
-Node * N(vector<Token>::iterator& i, Stack& varStack) {
+Node * N(vector<Token>::iterator& i) {
     // split up to aNode * left recursion
     Node * p = getNode(N_LBL);
-    p->left = A(i, varStack);
-    p->right = X(i, varStack);
+    p->left = A(i);
+    p->right = X(i);
 
     return p;
 }
 
-Node * X(vector<Token>::iterator& i, Stack& varStack) {
+Node * X(vector<Token>::iterator& i) {
     //<X> ->  / <A><X> | +<A><X> |  empty
     if (i->getTokenId() == DIV_TK || i->getTokenId() == PLUS_TK ){
         Node * p = getNode(X_LBL);
         p->token = i->getTokenInstance();
         i++;
-        p->left = A(i, varStack);
-        p->right = X(i, varStack); //right recursive
+        p->left = A(i);
+        p->right = X(i); //right recursive
         return p;
     }
     return nullptr; //empty
 }
 
-Node * A(vector<Token>::iterator& i, Stack& varStack) {
+Node * A(vector<Token>::iterator& i) {
     //A> -> <M> * <A> | <M>
     Node * p = getNode(A_LBL);
-    p->left = M(i, varStack);
+    p->left = M(i);
     if (i->getTokenId() == MULT_TK){
         i++;
         p->token = "*";
-        p->right = A(i, varStack);
+        p->right = A(i);
     }
     return p;
 }
 
-Node * M(vector<Token>::iterator& i, Stack& varStack) {
+Node * M(vector<Token>::iterator& i) {
     //<M> -> % <M> |  <R>
     Node * p = getNode(M_LBL);
 
     if (i->getTokenId() == MOD_TK){
         i++;
         p->token = "%";
-        p->right = M(i, varStack);
+        p->right = M(i);
 
     } else {
-        p->left = R(i, varStack);
+        p->left = R(i);
     }
     return p;
 }
 
-Node * R(vector<Token>::iterator& i, Stack& varStack) {
+Node * R(vector<Token>::iterator& i) {
    //<R> -> ( <expr> ) | Identifier | Integer
     Node * p = getNode(R_LBL);
 
    if (i->getTokenId() == LPRN_TK) {
 
        i++;
-       p->middle1 = expr(i, varStack);
+       p->middle1 = expr(i);
        if (i-> getTokenId() == RPRN_TK){
            i++;
        } else {
@@ -269,13 +241,8 @@ Node * R(vector<Token>::iterator& i, Stack& varStack) {
        p->token = i->getTokenInstance();
        i++;
     } else if (i->getTokenId() == ID_TK) {
-        if (varStack.find(i->getTokenInstance()) != -1){
-            p->token = i->getTokenInstance();
-            i++;
-        } else {
-           printError(statSemError(i->getTokenInstance()));
-           return nullptr;
-        }
+        p->token = i->getTokenInstance();
+        i++;
    } else {
        printError(parserError("Expression in parentheses, identifier, or number", i));
        return nullptr;
@@ -283,70 +250,64 @@ Node * R(vector<Token>::iterator& i, Stack& varStack) {
    return p;
 }
 
-Node * stats(vector<Token>::iterator& i, Stack& varStack){
+Node * stats(vector<Token>::iterator& i){
     //<stats> -> <stat>  <mStat>
     Node * p = getNode(STATS_LBL);
-    p->left = stat(i, varStack);
-    p->right = mstat(i, varStack);
+    p->left = stat(i);
+    p->right = mstat(i);
 
     return p;
 }
 
-Node * mstat(vector<Token>::iterator& i, Stack& varStack){
+Node * mstat(vector<Token>::iterator& i){
     //<mStat>-> <stat>  <mStat> | empty
     Node * p = getNode(M_LBL);
 
     //to allow empty
     vector<Token>::iterator previous = i;
     
-    p->left = stat(i, varStack);
+    p->left = stat(i);
 
     //if there was a statement, check for one more. otherwise it's empty and return.
     if (previous != i){
-        p-> right = mstat(i, varStack);
+        p-> right = mstat(i);
         return p;
     } else {
         return nullptr;
     }
 }
 
-Node * stat(vector<Token>::iterator& i, Stack& varStack){
+Node * stat(vector<Token>::iterator& i){
     Node * p = getNode(STAT_LBL);
 
-    p->left = in(i, varStack);
+    p->left = in(i);
     if (p->left == nullptr)
-        p->left = out(i, varStack);
+        p->left = out(i);
     if (p->left == nullptr)
-        p->left = block(i, varStack);
+        p->left = block(i);
     if (p->left == nullptr)
-        p->left = ifStat(i, varStack);
+        p->left = ifStat(i);
     if (p->left == nullptr)
-        p->left = loop(i, varStack);
+        p->left = loop(i);
     if (p->left == nullptr)
-        p->left = assign(i, varStack);
+        p->left = assign(i);
     if (p->left == nullptr)
-        p->left = label(i, varStack);
+        p->left = label(i);
     if (p->left == nullptr)
-        p->left = gotoStat(i, varStack);
+        p->left = gotoStat(i);
     if (p->left != nullptr)
         return p;
     else
         return nullptr;
 }
 
-Node * in(vector<Token>::iterator& i, Stack& varStack){
+Node * in(vector<Token>::iterator& i){
     if (i->getTokenId() == LST_TK){
         Node * p = getNode(IN_LBL);
         i++;
         if (i->getTokenId() == ID_TK){
-
-            if (varStack.find(i->getTokenInstance()) != -1){
-                p->token = i->getTokenInstance();
-                i++;
-            } else {
-                printError(statSemError(i->getTokenInstance()));
-                return nullptr; 
-            }
+            p->token = i->getTokenInstance();
+            i++;
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
@@ -361,11 +322,11 @@ Node * in(vector<Token>::iterator& i, Stack& varStack){
     return nullptr;
 }
 
-Node * out(vector<Token>::iterator& i, Stack& varStack){
+Node * out(vector<Token>::iterator& i){
     if (i->getTokenId() == YELL_TK){
         Node * p = getNode(OUT_LBL);
         i++;
-        p->right = expr(i, varStack);
+        p->right = expr(i);
 
         //check for semicolon
         if (i->getTokenId() == SCOLN_TK){
@@ -378,22 +339,22 @@ Node * out(vector<Token>::iterator& i, Stack& varStack){
     return nullptr;
 }
 
-Node * ifStat(vector<Token>::iterator& i, Stack& varStack){
+Node * ifStat(vector<Token>::iterator& i){
     
     if (i->getTokenId() == IF_TK){ //if token
         Node * p = getNode(IF_LBL);
         i++;
         if (i->getTokenId() == LBRC_TK){ //left bracket
             i++;
-            p->left = expr(i, varStack);
-            p->middle1 = RO(i, varStack);
-            p->middle2 = expr(i, varStack);
+            p->left = expr(i);
+            p->middle1 = RO(i);
+            p->middle2 = expr(i);
 
             if (i->getTokenId() == RBRC_TK){ //right bracket
                 i++;
                 if (i->getTokenId() == THEN_TK){ //then 
                     i++;
-                    p->right = stat(i, varStack);
+                    p->right = stat(i);
                     if (i->getTokenId() == SCOLN_TK){ //semicolon
                         i++;
                         return p;
@@ -413,30 +374,30 @@ Node * ifStat(vector<Token>::iterator& i, Stack& varStack){
     return nullptr;
 }
 
-Node * loop(vector<Token>::iterator& i, Stack& varStack){
+Node * loop(vector<Token>::iterator& i){
     //BNF is not ll1 => extra lookahead needed
     if (i->getTokenId() == RPT_TK){
         i++; //consume repeat token
         if (i->getTokenId() == LBRC_TK){ //if there is a right bracket, it's loop1
             i++; //consume the left bracket
-            return loop1(i, varStack);
+            return loop1(i);
         } else {
-            return loop2(i, varStack); //we did not consume the next token
+            return loop2(i); //we did not consume the next token
         }  
     } else {
         return nullptr;
     }
 }
 
-Node * loop1(vector<Token>::iterator& i, Stack& varStack){
+Node * loop1(vector<Token>::iterator& i){
     Node * p = getNode(LOOP1_LBL);
     //<loop1> -> repeat  [ <expr> <RO> <expr> ]  <stat>
-    p->left = expr(i, varStack);
-    p->middle1 = RO(i, varStack);
-    p->middle2 = expr(i, varStack);
+    p->left = expr(i);
+    p->middle1 = RO(i);
+    p->middle2 = expr(i);
     if (i->getTokenId() == RBRC_TK){
         i++;
-        p->right = stat(i, varStack);
+        p->right = stat(i);
     } else {
         printError(parserError("Right Bracket", i));
         return nullptr;
@@ -449,20 +410,19 @@ Node * loop1(vector<Token>::iterator& i, Stack& varStack){
         printError(parserError("semicolon", i));
         return nullptr;
     }  
-
 }
 
-Node * loop2(vector<Token>::iterator& i, Stack& varStack){
+Node * loop2(vector<Token>::iterator& i){
     //<loop2> -> repeat <stat> until [ <expr> <RO> <expr> ] 
     Node * p = getNode(LOOP2_LBL);
-    p->left = stat(i, varStack);
+    p->left = stat(i);
     if (i->getTokenId() == UNT_TK){
         i++;
         if (i->getTokenId() == LBRC_TK){
             i++;
-            p->middle1 = expr(i, varStack);
-            p->middle2 = RO(i, varStack);
-            p->right = expr(i, varStack);
+            p->middle1 = expr(i);
+            p->middle2 = RO(i);
+            p->right = expr(i);
             if (i->getTokenId() == RBRC_TK) {
                 i++;
             } else {
@@ -488,26 +448,18 @@ Node * loop2(vector<Token>::iterator& i, Stack& varStack){
     }  
 }
 
-Node * assign(vector<Token>::iterator& i, Stack& varStack){
+Node * assign(vector<Token>::iterator& i){
     //<assign> -> assign Identifier  = <expr>  
 
     if (i->getTokenId() == ASGN_KW_TK){
         Node * p = getNode(ASSIGN_LBL);
         i++;
         if (i->getTokenId() == ID_TK) {
-            
-            if (varStack.find(i->getTokenInstance()) != -1 ){
-                p->token = i->getTokenInstance();
-                i++;
-            } else {
-                printError(statSemError(i->getTokenInstance()));
-                return nullptr; 
-            }
-            
+            p->token = i->getTokenInstance();
+            i++;        
             if (i->getTokenId() == ASGN_TK) {
                 i++;
-                p->left = expr(i, varStack);
-
+                p->left = expr(i);
                 //check for semicolon
                 if (i->getTokenId() == SCOLN_TK){
                     i++;
@@ -525,21 +477,15 @@ Node * assign(vector<Token>::iterator& i, Stack& varStack){
     return nullptr;
 }
 
-Node * label(vector<Token>::iterator& i, Stack& varStack){
+Node * label(vector<Token>::iterator& i){
     // <label> -> label Identifier
 
     if (i->getTokenId() == LBL_TK) {
         Node * p = getNode(LABEL_LBL);
         i++;
         if (i->getTokenId() == ID_TK){
-
-            if (varStack.find(i->getTokenInstance()) != -1) {
-                p->token = i->getTokenInstance();
-                i++;
-            } else {
-                printError(statSemError(i->getTokenInstance()));
-                return nullptr; 
-            }
+            p->token = i->getTokenInstance();
+            i++;
             
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
@@ -555,19 +501,13 @@ Node * label(vector<Token>::iterator& i, Stack& varStack){
     return nullptr;
 }
 
-Node * gotoStat(vector<Token>::iterator& i, Stack& varStack){
+Node * gotoStat(vector<Token>::iterator& i){
     if (i->getTokenId() == PTL_TK) {
         Node * p = getNode(GOTO_LBL);
         i++;
         if (i->getTokenId() == ID_TK){
-            
-            if (varStack.find(i->getTokenInstance()) != -1) {
-                p->token = i->getTokenInstance();
-                i++;
-            } else {
-                printError(statSemError(i->getTokenInstance()));
-                return nullptr; 
-            }
+            p->token = i->getTokenInstance();
+            i++;
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;
@@ -582,7 +522,7 @@ Node * gotoStat(vector<Token>::iterator& i, Stack& varStack){
     return nullptr;
 }
 
-Node * RO(vector<Token>::iterator& i, Stack& varStack){
+Node * RO(vector<Token>::iterator& i){
     Node * p = getNode(RO_LBL);
     switch(i->getTokenId())
     {

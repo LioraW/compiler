@@ -3,5 +3,8 @@ declare x := whole ;
 
 main
 {
+    declare x := whole ;
+
     listen x;
+    listen y;
 }
