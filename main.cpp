@@ -3,45 +3,55 @@
 #include <fstream>
 #include <vector>
 
-#include "codeGen.h"
 #include "parser.h"
 #include "node.h"
 #include "statSem.h"
+#include "tree.h"
 
 bool fileNameContainsDot(string FileName);
 string validateFileName(string fileName);
+void makeInputFile(string fileName);
 
 int main(int argc, char **argv) {
 	string fileName;
 
     // If there is no argument
     if (argc <= 1) {
-        
-        // open a temp file 
+        //make a temp file for input
         fileName = "output";
-        ofstream inputfile(fileName + ".sp2022", ios::trunc);
-        string text = "";
-
-        //read keyboard input into temp file
-        while (cin >> text && text != "EOF") {
-            inputfile << text << " ";
-        }
-
-        inputfile.close();
+        makeInputFile(fileName);
 
     //else use the argument
     } else {
         fileName = validateFileName(argv[1]);
     }
     
+    //however we got the input, continue to compile
     if (fileName != "") {
         Node * tree = parser(fileName + ".sp2022"); //parse tree
         Stack varStack;                             //tracks variable declarations
         
-        checkStaticSemantics(tree, varStack);
+        printPreorder(tree, 0);
         
+        //create an ouput file
+        ofstream file;
+        
+        //open and truncate any previous data. then close it  
+        file.open(fileName + ".asm");
+        file.close();
 
-        codeGen("filodough", tree);
+        //now open it for appending
+        file.open(fileName + ".asm", ios::app);
+
+        if (file.is_open()){
+            //check static semantics and generate code
+            checkStaticSemantics(file, tree, varStack);
+            writeFileVarDeclarations(file);
+            file.close();
+
+        } else {
+            cout << "Error opening outputfile" << endl;
+        }
 
     }
 
@@ -55,6 +65,19 @@ bool fileNameContainsDot(string fileName) {
         }
     }
     return false;
+}
+
+//make a temp file for input
+void makeInputFile(string fileName){
+    ofstream inputfile(fileName + ".sp2022", ios::trunc);
+    string text = "";
+
+    //read keyboard input into temp file
+    while (cin >> text && text != "EOF") {
+        inputfile << text << " ";
+    }
+
+    inputfile.close();
 }
 
 string validateFileName(string fileName) {

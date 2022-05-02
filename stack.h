@@ -28,7 +28,7 @@ class Stack {
         void incrementCurrentBlockVarCount();
         bool varDeclaredInLocalScope(string str);
         void pushPlaceholder();
-        void popCurrentBlock();
+        void popCurrentBlock(); 
         bool isEmpty();
 };
 

@@ -5,6 +5,8 @@ main
 {
     declare x := whole ;
 
-    listen x;
-    listen y;
+    if [ 3 >= 2 ] then 
+    {
+     listen x;
+    } ;
 }
