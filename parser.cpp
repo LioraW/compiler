@@ -396,8 +396,7 @@ Node * loop1(vector<Token>::iterator& i){
     p->middle1 = RO(i);
     p->middle2 = expr(i);
     if (i->getTokenId() == RBRC_TK){
-        i++;
-        p->right = stat(i);
+        i++; 
     } else {
         printError(parserError("Right Bracket", i));
         return nullptr;
@@ -405,6 +404,7 @@ Node * loop1(vector<Token>::iterator& i){
     //check for semicolon
     if (i->getTokenId() == SCOLN_TK){
         i++;
+        p->right = stat(i);
         return p;
     } else {
         printError(parserError("semicolon", i));
