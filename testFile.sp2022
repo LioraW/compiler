@@ -1,12 +1,6 @@
-## p2g6, lastly, you want to very thoroughly test expressions with variations of below##
+## p2g2 ##
 declare x := whole ;
-
 main
 {
-    declare x := whole ;
-
-    if [ 3 >= 2 ] then 
-    {
-     listen x;
-    } ;
+listen x ;
 }

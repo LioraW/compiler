@@ -15,6 +15,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
         //local scoping  
         if (p->label == PROGRAM_LBL  || p->label == BLOCK_LBL ){
             varStack.pushPlaceholder();
+            file << "PUSH" << endl; //correpsonding spot in the virtual stack for the placeholder
         }
 
         //multiple definiton check
@@ -140,6 +141,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 file << "POP" << endl;
             }
             varStack.popCurrentBlock();
+            file << "POP" << endl; //pop the placeholder
         }
 	}
 }
