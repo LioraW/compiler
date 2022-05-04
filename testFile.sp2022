@@ -1,10 +1,16 @@
 ## p2g2 ##
 declare x := whole ;
+declare p := whole ;
+
 main
 {
     assign x = 1;
+    portal p;
     repeat listen x; 
     until [x >= 2];
+    
+    label p;
+    yell 8;
     
 
 }

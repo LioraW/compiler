@@ -486,7 +486,6 @@ Node * label(vector<Token>::iterator& i){
         if (i->getTokenId() == ID_TK){
             p->token = i->getTokenInstance();
             i++;
-            
             //check for semicolon
             if (i->getTokenId() == SCOLN_TK){
                 i++;

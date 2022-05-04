@@ -120,6 +120,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 break;
             case OUT_LBL:
                 v = getName(V);
+                checkStaticSemantics(file, p->right, varStack);
                 file << "STORE " << v << endl; //assuming expr stored the result in the accumuator
                 file << "WRITE " << v << endl;
                 break;
@@ -132,7 +133,6 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 checkStaticSemantics(file, p->right, varStack);
                 file << exitLabel << ": NOOP" << endl; //end if
                 
-
                 break;
             case LOOP1_LBL:
                 exitLabel = getName(L); 
@@ -142,7 +142,6 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 conditionalExpression(file, p, varStack, dependantStatementsLabel, exitLabel); //check conditionals
                 checkStaticSemantics(file, p->right, varStack); //dependant statements
                 file << "BR " << dependantStatementsLabel << endl; //branch to loop at the end of
-
                 file << exitLabel << ": NOOP" << endl; //end loop
 
                 break;
@@ -163,6 +162,18 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 stackPosition = varStack.find(p->token);
                 if (stackPosition != -1){
                     file << "STACKW " << stackPosition << endl; //store the value of the variable in the virtual stack in the same positon as the corresponding name in the varStack
+                }
+                break;
+            case LABEL_LBL:
+                stackPosition = varStack.find(p->token);
+                if (stackPosition != -1){
+                    file << p->token << ": NOOP " << endl; 
+                }
+                break;
+            case GOTO_LBL:
+                stackPosition = varStack.find(p->token);
+                if (stackPosition != -1){
+                    file << "BR " <<  p->token << endl; 
                 }
                 break;
             default:
