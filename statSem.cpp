@@ -177,7 +177,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 }
 
                 file << label2 << ": NOOP " << endl; //then 
-                // checkStaticSemantics(file, p->right, varStack); 
+                checkStaticSemantics(file, p->right, varStack); 
                 file << label << ": NOOP" << endl; //end if
 
                 break;

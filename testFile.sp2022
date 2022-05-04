@@ -3,7 +3,7 @@ declare x := whole ;
 main
 {
 
-    if [ 1 >= 2] then;
+    if [ 3 >= 2] then;
     listen x;
     
 

@@ -354,10 +354,9 @@ Node * ifStat(vector<Token>::iterator& i){
                 i++;
                 if (i->getTokenId() == THEN_TK){ //then 
                     i++;
-                    p->right = stat(i);
                     if (i->getTokenId() == SCOLN_TK){ //semicolon
                         i++;
-                        
+                        p->right = stat(i);
                         return p;
                     } else {
                         printError(parserError("semicolon", i));
