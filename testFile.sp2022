@@ -2,9 +2,9 @@
 declare x := whole ;
 main
 {
-    assign x = 3;
-    repeat [x >= 2];
-        listen x;
+    assign x = 1;
+    repeat listen x; 
+    until [x >= 2];
     
 
 }

@@ -151,7 +151,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 dependantStatementsLabel = getName(L); 
 
                 file << dependantStatementsLabel << ": NOOP " << endl; //do while loop label
-                checkStaticSemantics(file, p->right, varStack); //dependant statements (do while does these first)
+                checkStaticSemantics(file, p->left, varStack); //dependant statements (do while does these first)
                 conditionalExpression(file, p, varStack, dependantStatementsLabel, exitLabel); //check conditionals
                 file << "BR " << dependantStatementsLabel << endl; //branch to loop at the end of
 
