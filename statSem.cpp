@@ -41,6 +41,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
         string argR = ""; 
         string argL = "";
         string label = "";
+        string label2 = "";
         int stackPosition = -1; //initialize it for error conditions
 
         switch(p->label){
@@ -63,6 +64,50 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
             case N_LBL:
                 checkStaticSemantics(file, p->left, varStack);
                 checkStaticSemantics(file, p->right, varStack);
+                break;
+            case X_LBL:
+                checkStaticSemantics(file, p->left, varStack);
+                checkStaticSemantics(file, p->right, varStack);
+
+                if (p->token == "/"){
+                    file << "DIV " << argR << endl; //would store result in acc
+                } else if (p->token == "+"){
+                    file << "ADD " << argR << endl; //would store result in acc
+                }
+                break;
+            case A_LBL:
+                //evaulate and store LHS
+                checkStaticSemantics(file, p->left, varStack);
+                argL = getName(V);
+                file << "STORE " << argL << endl; 
+                if (p->token == "*"){
+                    checkStaticSemantics(file, p->right, varStack);
+                    file << "MULT " << argL << endl;
+                }
+                break;
+            case M_LBL:
+                if (p->token == "%"){
+                    checkStaticSemantics(file, p->right, varStack);
+                    v = getName(V);
+                    file << "STORE " << v << endl; //store the result in a temporary variable
+                    file << "SUB " << v << endl;
+                    file << "SUB " << v << endl; 
+                } else {
+                    checkStaticSemantics(file, p->left, varStack);
+                }
+                break;
+            case R_LBL:
+                if (p->middle1){
+                    checkStaticSemantics(file, p->middle1, varStack);
+
+                } else if (isNumber(p->token)){
+                        file << "LOAD " << p->token << endl;
+                } else {
+                    stackPosition = varStack.find(p->token);
+                    if (stackPosition != -1){
+                        file << "STACKR " << stackPosition << endl;
+                    } 
+                }
                 break;
             case IN_LBL:
                 stackPosition = varStack.find(p->token);
@@ -92,6 +137,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 //evaluate for most arguments (except ...)
                 file << "SUB " << argR << endl; // lhs - rhs => ACC
                 label = getName(L); 
+                label2 = getName(L);
 
                 //Relational Operators
                 if (p->middle1->token == "=="){ //acc pos or neg (ie not zero) ? false : true 
@@ -106,14 +152,39 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 } else if (p->middle1->token == "..."){ //needs special evaluation. '...' means two sides have different signs
                     file << "LOAD " << argR << endl;
                     file << "MULT " << argL << endl;
-                    file << "BRNEG " << label << endl; //if the result is negative they had different signs, unless one is zero
-                    //TODO what if one side is zero (zero counts as positive)
+                    file << "BRPOS " << label << endl; //if the product is positve they had the same sign. skip the block.
+                    file << "BRNEG " << label2 << endl; //if the product is negative, they have different signs. go to block.
+                    
+                    //PAST THIS POINT the product was zero. Deal with that.
+                    // Therefore, they have the same sign if:
+
+                    //1. either of them is positive.
+                    file << "LOAD  " << argL << endl;
+                    file << "BRPOS " << label << endl;
+                    file << "LOAD " << argR << endl;
+                    file << "BRPOS " << label << endl;
+                    
+                    //2. they are both zero.
+                    file << "LOAD " << argL << endl;
+                    file << "ADD " << argR << endl;//this works because we know their product is zero at this point.
+                    file << "BRZERO " << label << endl; 
 
                 }
 
                 //dependant statements
-                checkStaticSemantics(file, p->right, varStack); 
+                if (p->right){
+                    cout << "There was a right" << endl;
+                }
+
+                file << label2 << ": NOOP " << endl; //then 
+                // checkStaticSemantics(file, p->right, varStack); 
                 file << label << ": NOOP" << endl; //end if
+
+                break;
+            case LOOP1_LBL:
+
+                break;
+            case LOOP2_LBL:
 
                 break;
             case ASSIGN_LBL:

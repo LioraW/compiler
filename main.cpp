@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
         Node * tree = parser(fileName + ".sp2022"); //parse tree
         Stack varStack;                             //tracks variable declarations
         
-        //printPreorder(tree, 0);
+        printPreorder(tree, 0);
         
         //create an ouput file
         ofstream file;

@@ -2,5 +2,9 @@
 declare x := whole ;
 main
 {
-listen x ;
+
+    if [ 1 >= 2] then;
+    listen x;
+    
+
 }

@@ -261,7 +261,7 @@ Node * stats(vector<Token>::iterator& i){
 
 Node * mstat(vector<Token>::iterator& i){
     //<mStat>-> <stat>  <mStat> | empty
-    Node * p = getNode(M_LBL);
+    Node * p = getNode(MSTATS_LBL);
 
     //to allow empty
     vector<Token>::iterator previous = i;
@@ -357,6 +357,7 @@ Node * ifStat(vector<Token>::iterator& i){
                     p->right = stat(i);
                     if (i->getTokenId() == SCOLN_TK){ //semicolon
                         i++;
+                        
                         return p;
                     } else {
                         printError(parserError("semicolon", i));
