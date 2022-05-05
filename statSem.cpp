@@ -1,5 +1,6 @@
 #include <iostream>
 #include <fstream>
+#include <stdlib.h>
 
 #include "node.h"
 #include "tree.h"
@@ -37,7 +38,6 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
         }
 
         //Code Generation
-        string v = "";
         string argR = ""; 
         string argL = "";
         string exitLabel = "";
@@ -46,12 +46,13 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
 
         switch(p->label){
             case EXPR_LBL:
-                //evaulate and store LHS
+                //evaulate LHS
                 checkStaticSemantics(file, p->left, varStack);
-                argL = getName(V);
-                file << "STORE " << argL << endl; 
                 
                 if (p->token == "-"){
+                    //store LHS
+                    argL = getName(V);
+                    file << "STORE " << argL << endl; 
                     //evaulate and store RHS
                     checkStaticSemantics(file, p->right, varStack);
                     argR = getName(V);
@@ -66,21 +67,28 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 checkStaticSemantics(file, p->right, varStack);
                 break;
             case X_LBL:
-                checkStaticSemantics(file, p->left, varStack);
                 checkStaticSemantics(file, p->right, varStack);
+                argR = getName(V);
+                file << "STORE " << argR << endl;
+                checkStaticSemantics(file, p->left, varStack);
+                
 
                 if (p->token == "/"){
-                    file << "DIV " << argR << endl; //would store result in acc
+                    argL = getName(V);
+                    file << "STORE " << argL << endl;
+                    file << "LOAD " << argR << endl;
+                    file << "DIV " << argL << endl; //would store result in acc
                 } else if (p->token == "+"){
                     file << "ADD " << argR << endl; //would store result in acc
                 }
                 break;
             case A_LBL:
-                //evaulate and store LHS
+                //evaulate LHS
                 checkStaticSemantics(file, p->left, varStack);
-                argL = getName(V);
-                file << "STORE " << argL << endl; 
                 if (p->token == "*"){
+                    //store LHS
+                    argL = getName(V);
+                    file << "STORE " << argL << endl; 
                     checkStaticSemantics(file, p->right, varStack);
                     file << "MULT " << argL << endl;
                 }
@@ -88,10 +96,10 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
             case M_LBL:
                 if (p->token == "%"){
                     checkStaticSemantics(file, p->right, varStack);
-                    v = getName(V);
-                    file << "STORE " << v << endl; //store the result in a temporary variable
-                    file << "SUB " << v << endl;
-                    file << "SUB " << v << endl; 
+                    argR = getName(V);
+                    file << "STORE " << argR << endl; //store the result in a temporary variable
+                    file << "SUB " << argR << endl;
+                    file << "SUB " << argR << endl; 
                 } else {
                     checkStaticSemantics(file, p->left, varStack);
                 }
@@ -99,7 +107,6 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
             case R_LBL:
                 if (p->middle1){
                     checkStaticSemantics(file, p->middle1, varStack);
-
                 } else if (isNumber(p->token)){
                         file << "LOAD " << p->token << endl;
                 } else {
@@ -112,17 +119,17 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
             case IN_LBL:
                 stackPosition = varStack.find(p->token);
                 if (stackPosition != -1) {
-                    argL = getName(V);
-                    file << "READ " << argL << endl;
-                    file << "LOAD " << argL << endl;
+                    argR = getName(V);
+                    file << "READ " << argR << endl;
+                    file << "LOAD " << argR << endl;
                     file << "STACKW " << stackPosition << endl; //store the value
                 }
                 break;
             case OUT_LBL:
-                v = getName(V);
                 checkStaticSemantics(file, p->right, varStack);
-                file << "STORE " << v << endl; //assuming expr stored the result in the accumuator
-                file << "WRITE " << v << endl;
+                argR = getName(V);
+                file << "STORE " << argR << endl; //assuming expr stored the result in the accumuator
+                file << "WRITE " << argR << endl;
                 break;
             case IF_LBL:
                 exitLabel = getName(L); 
@@ -137,26 +144,23 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
             case LOOP1_LBL:
                 exitLabel = getName(L); 
                 dependantStatementsLabel = getName(L); 
-
                 file << dependantStatementsLabel << ": NOOP " << endl; //while loop label
                 conditionalExpression(file, p, varStack, dependantStatementsLabel, exitLabel); //check conditionals
                 checkStaticSemantics(file, p->right, varStack); //dependant statements
                 file << "BR " << dependantStatementsLabel << endl; //branch to loop at the end of
                 file << exitLabel << ": NOOP" << endl; //end loop
-
                 break;
+            
             case LOOP2_LBL:
                 exitLabel = getName(L); 
                 dependantStatementsLabel = getName(L); 
-
                 file << dependantStatementsLabel << ": NOOP " << endl; //do while loop label
                 checkStaticSemantics(file, p->left, varStack); //dependant statements (do while does these first)
                 conditionalExpression(file, p, varStack, dependantStatementsLabel, exitLabel); //check conditionals
                 file << "BR " << dependantStatementsLabel << endl; //branch to loop at the end of
-
                 file << exitLabel << ": NOOP" << endl; //end loop
-
                 break;
+            
             case ASSIGN_LBL:
                 checkStaticSemantics(file, p->left, varStack); //leaves result in accumulator
                 stackPosition = varStack.find(p->token);
@@ -177,7 +181,7 @@ void checkStaticSemantics(ofstream& file, Node * p, Stack& varStack){
                 }
                 break;
             default:
-                //continue traversal
+                // //continue traversal
                 checkStaticSemantics(file, p->left, varStack); 
                 checkStaticSemantics(file, p->middle1, varStack);
                 checkStaticSemantics(file, p->middle2, varStack);
@@ -263,7 +267,7 @@ void conditionalExpression(ofstream& file, Node * p, Stack& varStack, string dep
 }
 
 void writeFileVarDeclarations(ofstream& file){
-    int totalVarCount  = (int) getName(V)[1];
+    int totalVarCount  = stoi(getName(V).substr(1,1));
     file << "STOP" << endl;
     for (int i = 0; i < totalVarCount; i++){
         file << "V" << i << " 0" << endl;
