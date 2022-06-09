@@ -1,6 +1,15 @@
+## p2g6, lastly, you want to very thoroughly test expressions with variations of below##
+declare a := whole ;
+declare b := whole ;
+declare c := whole ;
 
 main
 {
-    yell 6 /3;
+    assign a = 0 - 3 ;
+    assign c = 19 ;
+   repeat [ a ... 3] {
+       listen a;
+       yell a;
 
+   };
 }
