@@ -1,23 +1,25 @@
-P3 Static Semantics CS4280
+P4 Code Generation
 Liora Wachsstock
 
-Storage = Local 
+Storage = Local
 
 Global variables are processed as local varibles in the top scope. (This is one of the options in the requirments.)
 
 COMPILATION AND EXECUTION:
 For easy compilation use "Make".
 
-Execution: 
-./statSem (it will take input from stdin until you type "EOF") OR
-./statSem testFile.sp2022 (.sp2022 is a required extension type) OR
-./statSem < testFile.sp2022
+Execution:
+./compfs (it will take input from stdin until you type "EOF") OR
+./compfs testFile.sp2022 (.sp2022 is a required extension type) OR
+./compfs < testFile.sp2022
 
 
 ORGANIZATION:
 main.cpp: validates filename and starts program
 
 parser.cpp/parser.h: parser code (implementation of BNF)
+
+statSem.cpp/statSem.h: static semantics and assembly language code generation
 
 tree.cpp/tree.h: code for parse tree
 
