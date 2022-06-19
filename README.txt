@@ -1,15 +1,13 @@
-P4 Code Generation
+CS 4280 Compiler
 Liora Wachsstock
 
-Storage = Local
-
-Global variables are processed as local varibles in the top scope. (This is one of the options in the requirments.)
+Compiles our high level language (described in the BNF document) into UMSL's assembly language.
 
 COMPILATION AND EXECUTION:
 For easy compilation use "Make".
 
 Execution:
-./compfs (it will take input from stdin until you type "EOF") OR
+./compfs (will take input from stdin until you type "EOF") OR
 ./compfs testFile.sp2022 (.sp2022 is a required extension type) OR
 ./compfs < testFile.sp2022
 
@@ -19,7 +17,7 @@ main.cpp: validates filename and starts program
 
 parser.cpp/parser.h: parser code (implementation of BNF)
 
-statSem.cpp/statSem.h: static semantics and assembly language code generation
+codeGen.cpp/codeGen.h: static semantics and assembly language code generation
 
 tree.cpp/tree.h: code for parse tree
 
