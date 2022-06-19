@@ -17,7 +17,7 @@ main.cpp: validates filename and starts program
 
 parser.cpp/parser.h: parser code (implementation of BNF)
 
-codeGen.cpp/codeGen.h: static semantics and assembly language code generation
+statSem.cpp/statSem.h: static semantics and assembly language code generation
 
 tree.cpp/tree.h: code for parse tree
 
